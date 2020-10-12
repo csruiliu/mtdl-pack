@@ -10,7 +10,7 @@ local_path:
   mnist_train_label_path: /home/ruiliu/Development/dataset/mnist-train-labels.idx1-ubyte
   mnist_t10k_img_path: /home/ruiliu/Development/dataset/mnist-t10k-images.idx3-ubyte
   mnist_t10k_label_path: /home/ruiliu/Development/dataset/mnist-t10k-labels.idx1-ubyte
-  profile_path: /home/ruiliu/Development/mtml-tf/profile-result
+  profile_path: /home/ruiliu/Development/mtdl-pack/profile-result
 
 roscoe_path:
   cifar_10_path: /tank/local/ruiliu/dataset/cifar-10
@@ -24,7 +24,7 @@ roscoe_path:
   mnist_train_label_path: /tank/local/ruiliu/dataset/mnist-train-labels.idx1-ubyte
   mnist_t10k_img_path: /tank/local/ruiliu/dataset/mnist-t10k-images.idx3-ubyte
   mnist_t10k_label_path: /tank/local/ruiliu/dataset/mnist-t10k-labels.idx1-ubyte
-  profile_path: /tank/local/ruiliu/mtml-tf/profile-result
+  profile_path: /tank/local/ruiliu/mtdl-pack/profile-result
 
 hp_path:
   cifar_10_path: /home/user/Development/dataset/cifar-10
@@ -38,7 +38,7 @@ hp_path:
   mnist_train_label_path: /home/user/Development/dataset/mnist-train-labels.idx1-ubyte
   mnist_t10k_img_path: /home/user/Development/dataset/mnist-t10k-images.idx3-ubyte
   mnist_t10k_label_path: /home/user/Development/dataset/mnist-t10k-labels.idx1-ubyte
-  profile_path: /home/user/Development/mtml-tf/profile-result
+  profile_path: /home/user/Development/mtdl-pack/profile-result
 
 hyperparams_input:
   img_width_imagenet: 224
