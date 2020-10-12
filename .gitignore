@@ -1,0 +1,17 @@
+*.txt
+*.csv
+*.md
+*.png
+*.pdf
+*.jpg
+*.pyc
+
+**/dataset/
+**/__pycache__/
+**/logs/
+**/exp-result/
+**/exp-figure/
+**/profile-result/
+**/.idea/
+**/model_ckpt/
+
