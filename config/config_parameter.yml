@@ -22,7 +22,6 @@ hyperparams_single_train:
   learning_rate: 0.01
   record_marker: 2
   use_cpu: False
-  use_raw_image: True
   measure_step: True
   use_tb_timeline: False
 
