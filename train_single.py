@@ -4,10 +4,10 @@ import os
 import numpy as np
 from timeit import default_timer as timer
 
-import config_parameter as cfg_para
-import config_path as cfg_path
-from model_importer import ModelImporter
-from utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
+import config.config_parameter as cfg_para
+import config.config_path as cfg_path
+from models.model_importer import ModelImporter
+from utils.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
 
 
 def build_model():
@@ -53,7 +53,19 @@ def train_model():
                     train_feature_batch = train_feature[batch_offset:batch_end]
 
                 train_label_batch = train_label[batch_offset:batch_end]
-                sess.run(train_op, feed_dict={features: train_feature_batch, labels: train_label_batch})
+
+                if use_tf_timeline:
+                    profile_path = cfg_path.profile_path
+                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                    run_metadata = tf.RunMetadata()
+                    sess.run(train_op, feed_dict={features: train_feature_batch, labels: train_label_batch},
+                             options=run_options, run_metadata=run_metadata)
+                    trace = timeline.Timeline(step_stats=run_metadata.step_stats)
+                    trace_file = open(profile_path + '/' + str(train_model) + '-' + str(train_batch_size) + '-'
+                                      + str(i) + '.json', 'w')
+                    trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
+                else:
+                    sess.run(train_op, feed_dict={features: train_feature_batch, labels: train_label_batch})
 
                 if i != 0:
                     end_time = timer()
@@ -82,7 +94,7 @@ if __name__ == '__main__':
     train_layer_num = cfg_para.single_num_layer
     train_learn_rate = cfg_para.single_learning_rate
     train_activation = cfg_para.single_activation
-    train_model = cfg_para.single_model_type
+    train_model_type = cfg_para.single_model_type
     train_batch_size = cfg_para.single_batch_size
     train_dataset = cfg_para.single_train_dataset
     use_tf_timeline = cfg_para.single_use_tb_timeline

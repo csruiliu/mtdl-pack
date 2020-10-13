@@ -1,6 +1,6 @@
 import yaml
 
-with open("config_path.yml", 'r') as ymlfile:
+with open("config/config_path.yml", 'r') as ymlfile:
     cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
 #path_cfg = cfg['local_path']
