@@ -1,0 +1,47 @@
+local_path:
+  dataset_imagenet_t50k_img_raw: /home/ruiliu/Development/dataset/imagenet50k
+  dataset_imagenet_t50k_label: /home/ruiliu/Development/dataset/imagenet50k-label.txt
+  dataset_imagenet_t10k_img_raw: /home/ruiliu/Development/dataset/imagenet10k
+  dataset_imagenet_t10k_img_bin: /home/ruiliu/Development/dataset/imagenet10k.bin
+  dataset_imagenet_t10k_label: /home/ruiliu/Development/dataset/imagenet10k-label.txt
+  dataset_imagenet_t1k_img_raw: /home/ruiliu/Development/dataset/imagenet1k
+  dataset_imagenet_t1k_img_bin: /home/ruiliu/Development/dataset/imagenet1k.bin
+  dataset_imagenet_t1k_label: /home/ruiliu/Development/dataset/imagenet1k-label.txt
+  dataset_mnist_train_img: /home/ruiliu/Development/dataset/mnist/mnist-train-images.idx3-ubyte
+  dataset_mnist_train_label: /home/ruiliu/Development/dataset/mnist/mnist-train-labels.idx1-ubyte
+  dataset_mnist_t10k_img: /home/ruiliu/Development/dataset/mnist/mnist-t10k-images.idx3-ubyte
+  dataset_mnist_t10k_label: /home/ruiliu/Development/dataset/mnist/mnist-t10k-labels.idx1-ubyte
+  dataset_cifar_10_path: /home/ruiliu/Development/dataset/cifar-10
+  profile_path: /home/ruiliu/Development/mtdl-pack/profile-result
+
+roscoe_path:
+  dataset_imagenet_t50k_img_raw: /tank/local/ruiliu/dataset/imagenet50k
+  dataset_imagenet_t50k_label: /tank/local/ruiliu/dataset/imagenet50k-label.txt
+  dataset_imagenet_t10k_img_raw: /tank/local/ruiliu/dataset/imagenet10k
+  dataset_imagenet_t10k_img_bin: /tank/local/ruiliu/dataset/imagenet10k.bin
+  dataset_imagenet_t10k_label: /tank/local/ruiliu/dataset/imagenet10k-label.txt
+  dataset_imagenet_t1k_img_raw: /tank/local/ruiliu/dataset/imagenet1k
+  dataset_imagenet_t1k_img_bin: /tank/local/ruiliu/dataset/imagenet1k.bin
+  dataset_imagenet_t1k_label: /tank/local/ruiliu/dataset/imagenet1k-label.txt
+  dataset_mnist_train_img: /tank/local/ruiliu/dataset/mnist-train-images.idx3-ubyte
+  dataset_mnist_train_label: /tank/local/ruiliu/dataset/mnist-train-labels.idx1-ubyte
+  dataset_mnist_t10k_img: /tank/local/ruiliu/dataset/mnist-t10k-images.idx3-ubyte
+  dataset_mnist_t10k_label: /tank/local/ruiliu/dataset/mnist-t10k-labels.idx1-ubyte
+  dataset_cifar_10_path: /tank/local/ruiliu/dataset/cifar-10
+  profile_path: /tank/local/ruiliu/mtdl-pack/profile-result
+
+hp_path:
+  dataset_imagenet_t50k_img_raw: /home/user/Development/dataset/imagenet50k
+  dataset_imagenet_t50k_label: /home/user/Development/dataset/imagenet50k-label.txt
+  dataset_imagenet_t10k_img_raw: /home/user/Development/dataset/imagenet10k
+  dataset_imagenet_t10k_img_bin: /home/user/Development/dataset/imagenet10k.bin
+  dataset_imagenet_t10k_label: /home/user/Development/dataset/imagenet10k-label.txt
+  dataset_imagenet_t1k_img_raw: /home/user/Development/dataset/imagenet1k
+  dataset_imagenet_t1k_img_bin: /home/user/Development/dataset/imagenet1k.bin
+  dataset_imagenet_t1k_label: /home/user/Development/dataset/imagenet1k-label.txt
+  dataset_mnist_train_img: /home/user/Development/dataset/mnist-train-images.idx3-ubyte
+  dataset_mnist_train_label: /home/user/Development/dataset/mnist-train-labels.idx1-ubyte
+  dataset_mnist_t10k_img: /home/user/Development/dataset/mnist-t10k-images.idx3-ubyte
+  dataset_mnist_t10k_label: /home/user/Development/dataset/mnist-t10k-labels.idx1-ubyte
+  dataset_cifar_10_path: /home/user/Development/dataset/cifar-10
+  profile_path: /home/user/Development/mtdl-pack/profile-result
