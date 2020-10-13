@@ -12,7 +12,7 @@ from utils.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot,
 
 def build_model():
     model_name_abbr = np.random.choice(rand_seed, 1, replace=False).tolist()
-    dm = ModelImporter(train_model, str(model_name_abbr.pop()), train_layer_num, img_height, img_width, num_channel,
+    dm = ModelImporter(train_model_type, str(model_name_abbr.pop()), train_layer_num, img_height, img_width, num_channel,
                        num_class, train_batch_size, train_optimizer, train_learn_rate, train_activation, False)
     model_entity = dm.get_model_entity()
     model_logit = model_entity.build(features)
@@ -61,7 +61,7 @@ def train_model():
                     sess.run(train_op, feed_dict={features: train_feature_batch, labels: train_label_batch},
                              options=run_options, run_metadata=run_metadata)
                     trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-                    trace_file = open(profile_path + '/' + str(train_model) + '-' + str(train_batch_size) + '-'
+                    trace_file = open(profile_path + '/' + str(train_model_type) + '-' + str(train_batch_size) + '-'
                                       + str(i) + '.json', 'w')
                     trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
                 else:
