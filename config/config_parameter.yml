@@ -20,9 +20,8 @@ hyperparams_single_train:
   batch_size: 32
   num_model_layer: 1
   learning_rate: 0.01
-  record_marker: 2
+  train_dataset: cifar10
   use_cpu: False
-  measure_step: True
   use_tb_timeline: False
 
 hyperparams_pack_train:
@@ -49,6 +48,7 @@ hyperparams_pack_train:
   learning_rate:
     - 0.00001
     - 0.00001
+  train_dataset: cifar10
   record_marker: 3
   batch_padding: False
   use_cpu: False

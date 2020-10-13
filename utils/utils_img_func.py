@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import cv2
+import os
 from keras.datasets import cifar10
 from keras.utils import to_categorical
 
@@ -8,7 +9,7 @@ from keras.utils import to_categorical
 #####################################
 # read mnist training data
 #####################################
-def load_mnist_image(path, rd_seed):
+def load_mnist_image(path):
     mnist_num_channels = 1
     with open(path, 'rb') as bytestream:
         _ = int.from_bytes(bytestream.read(4), byteorder='big')
@@ -25,7 +26,7 @@ def load_mnist_image(path, rd_seed):
 #####################################
 # read mnist test data
 #####################################
-def load_mnist_label_onehot(path, rd_seed):
+def load_mnist_label_onehot(path):
     num_classes = 10
     with open(path, 'rb') as bytestream:
         _ = int.from_bytes(bytestream.read(4), byteorder='big')
