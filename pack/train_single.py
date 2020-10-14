@@ -80,7 +80,7 @@ def train_model():
 
     overall_time = overall_time_end - overall_time_start
 
-    print('overall training time:{}, average training time:{}'.format(overall_time, step_time / step_count * 1000))
+    print('overall training time (s):{}, average step time (ms):{}'.format(overall_time, step_time / step_count * 1000))
 
 
 if __name__ == '__main__':
@@ -161,4 +161,4 @@ if __name__ == '__main__':
 
     train_op = build_model()
 
-    #train_model()
+    train_model()
