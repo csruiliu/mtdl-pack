@@ -17,9 +17,6 @@ def build_model():
     dm = ModelImporter(train_model_type, str(model_name_abbr.pop()), train_layer_num, img_height, img_width, num_channel,
                        num_class, train_batch_size, train_optimizer, train_learn_rate, train_activation, False)
 
-    features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
-    labels = tf.placeholder(tf.int64, [None, num_class])
-
     model_entity = dm.get_model_entity()
     model_logit = model_entity.build(features, is_training=True)
     train_step = model_entity.train(model_logit, labels)
@@ -162,6 +159,9 @@ if __name__ == '__main__':
     ###########################################################
     # Build and train model due to input dataset
     ###########################################################
+
+    features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+    labels = tf.placeholder(tf.int64, [None, num_class])
 
     train_op = build_model()
 

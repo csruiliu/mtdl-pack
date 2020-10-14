@@ -15,13 +15,10 @@ from utils.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot,
 
 def build_model():
     train_collection = list()
-    names = locals()
+
     model_name_abbr = np.random.choice(rand_seed, len(train_model_type_list), replace=False).tolist()
 
     for midx, mvalue in enumerate(train_model_type_list):
-        names['features' + str(midx)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
-        names['labels' + str(midx)] = tf.placeholder(tf.int64, [None, num_class])
-
         dm = ModelImporter(mvalue, str(model_name_abbr.pop()), train_layer_num_list[midx], img_width, img_height,
                            num_channel, num_class, train_batch_size_list[midx], train_optimizer_list[midx],
                            train_learn_rate_list[midx], train_activation_list[midx], batch_padding=False)
@@ -154,6 +151,12 @@ if __name__ == '__main__':
     #########################
     # Build and Train
     #########################
+
+    names = locals()
+
+    for i in range(len(train_model_type_list)):
+        names['features' + str(i)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+        names['labels' + str(i)] = tf.placeholder(tf.int64, [None, num_class])
 
     train_model_list = build_model()
 
