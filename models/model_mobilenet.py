@@ -48,11 +48,11 @@ class mobilenet(object):
             bottleneck_dim = round(expansion_ratio * input.get_shape().as_list()[-1])
             net = self._conv_1x1(input, bottleneck_dim, name='pw', bias=bias)
             net = self._batch_norm(net, train=is_train, name='pw_bn')
-            net = activation_layer(net, self.activation)
+            net = self.activation_layer(net, self.activation)
 
             net = self._dwise_conv(net, strides=[1, stride, stride, 1], name='dw', bias=bias)
             net = self._batch_norm(net, train=is_train, name='dw_bn')
-            net = activation_layer(net, self.activation)
+            net = self.activation_layer(net, self.activation)
 
             net = self._conv_1x1(net, output_dim, name='pw_linear', bias=bias)
             net = self._batch_norm(net, train=is_train, name='pw_linear_bn')
@@ -74,14 +74,14 @@ class mobilenet(object):
         with tf.variable_scope(block_name):
             block = self._conv2d(x_init, out_dim, kernel_size, kernel_size, strides_size, strides_size)
             block = self._batch_norm(block, train=is_train, name='bn')
-            block = activation_function(block, self.activation)
+            block = self.activation_layer(block, self.activation)
         return block
 
     def _pwise_block(self, x_init, output_dim, is_train, block_name, bias=False):
         with tf.variable_scope(block_name):
             out = self._conv_1x1(x_init, output_dim, bias=bias, name='pwb')
             out = self._batch_norm(out, train=is_train, name='bn')
-            block = activation_function(out, self.activation)
+            block = self.activation_layer(out, self.activation)
         return block
 
     def _conv2d(self, x_init, output_dim, kernel_height, kernel_width, strides_h, strides_w, stddev=0.02, bias=False,
