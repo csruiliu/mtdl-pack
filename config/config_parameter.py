@@ -41,21 +41,21 @@ single_use_cpu = hyperparams_single_cfg['use_cpu']
 single_use_tb_timeline = hyperparams_single_cfg['use_tb_timeline']
 
 ##########################################
-# Hyperparameters for pack training
+# Hyperparameters for multiple training
 ##########################################
 
-hyperparams_pack_cfg = cfg['hyperparams_pack_train']
-pack_num_epoch = hyperparams_pack_cfg['num_epoch']
-pack_rand_seed = hyperparams_pack_cfg['random_seed']
-pack_model_type = hyperparams_pack_cfg['packed_model_type']
-pack_activation = hyperparams_pack_cfg['activation']
-pack_opt = hyperparams_pack_cfg['optimizer']
-pack_batch_size = hyperparams_pack_cfg['batch_size']
-pack_num_layer = hyperparams_pack_cfg['num_model_layer']
-pack_learning_rate = hyperparams_pack_cfg['learning_rate']
-pack_train_dataset = hyperparams_pack_cfg['train_dataset']
-pack_batch_padding = hyperparams_pack_cfg['batch_padding']
-pack_use_cpu = hyperparams_pack_cfg['use_cpu']
-pack_same_input = hyperparams_pack_cfg['same_input']
-pack_use_tb_timeline = hyperparams_pack_cfg['use_tb_timeline']
+hyperparams_multi_cfg = cfg['hyperparams_multiple_train']
+multi_rand_seed = hyperparams_multi_cfg['random_seed']
+multi_num_epoch = hyperparams_multi_cfg['num_epoch']
+multi_model_type = hyperparams_multi_cfg['model_type']
+multi_activation = hyperparams_multi_cfg['activation']
+multi_opt = hyperparams_multi_cfg['optimizer']
+multi_batch_size = hyperparams_multi_cfg['batch_size']
+multi_num_layer = hyperparams_multi_cfg['num_model_layer']
+multi_learning_rate = hyperparams_multi_cfg['learning_rate']
+multi_train_dataset = hyperparams_multi_cfg['train_dataset']
+multi_batch_padding = hyperparams_multi_cfg['batch_padding']
+multi_use_cpu = hyperparams_multi_cfg['use_cpu']
+multi_same_input = hyperparams_multi_cfg['same_input']
+multi_use_tb_timeline = hyperparams_multi_cfg['use_tb_timeline']
 

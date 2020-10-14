@@ -24,10 +24,10 @@ hyperparams_single_train:
   use_cpu: False
   use_tb_timeline: False
 
-hyperparams_pack_train:
+hyperparams_multiple_train:
   num_epoch: 1
   random_seed: 10000
-  packed_model_type:
+  model_type:
     - mobilenet
     - mobilenet
   # activation: sigmoid, leaky_relu, tanh, relu

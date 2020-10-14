@@ -79,19 +79,19 @@ if __name__ == '__main__':
     # Hyperparameters read from config
     ##########################################
 
-    rand_seed = cfg_para.single_rand_seed
+    rand_seed = cfg_para.multi_rand_seed
 
-    train_model_type_list = cfg_para.pack_model_type
-    train_optimizer_list = cfg_para.pack_opt
-    train_layer_num_list = cfg_para.pack_num_layer
-    train_activation_list = cfg_para.pack_activation
-    train_batch_size_list = cfg_para.pack_batch_size
-    train_learn_rate_list = cfg_para.pack_learning_rate
+    train_model_type_list = cfg_para.multi_model_type
+    train_optimizer_list = cfg_para.multi_opt
+    train_layer_num_list = cfg_para.multi_num_layer
+    train_activation_list = cfg_para.multi_activation
+    train_batch_size_list = cfg_para.multi_batch_size
+    train_learn_rate_list = cfg_para.multi_learning_rate
 
-    num_epoch = cfg_para.pack_num_epoch
-    train_dataset = cfg_para.pack_train_dataset
-    use_tf_timeline = cfg_para.pack_use_tb_timeline
-    use_cpu = cfg_para.pack_use_cpu
+    num_epoch = cfg_para.multi_num_epoch
+    train_dataset = cfg_para.multi_train_dataset
+    use_tf_timeline = cfg_para.multi_use_tb_timeline
+    use_cpu = cfg_para.multi_use_cpu
 
     if use_cpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
