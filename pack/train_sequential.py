@@ -36,8 +36,6 @@ def train_model(train_step_arg, batch_size_arg, tidx_arg):
     config.gpu_options.allow_growth = True
     config.allow_soft_placement = True
 
-    names = locals()
-
     if train_dataset == 'imagenet':
         image_list = sorted(os.listdir(train_img_path))
 
@@ -46,7 +44,7 @@ def train_model(train_step_arg, batch_size_arg, tidx_arg):
         num_batch = train_label.shape[0] // batch_size_arg
 
         for e in range(num_epoch):
-            for i in range(batch_size_arg):
+            for i in range(num_batch):
                 print('epoch %d / %d, step %d / %d' % (e + 1, num_epoch, i + 1, num_batch))
 
                 batch_offset = i * batch_size_arg
@@ -152,7 +150,7 @@ if __name__ == '__main__':
     # Build and Train
     #########################
 
-    names = locals()
+    names = globals()
 
     for i in range(len(train_model_type_list)):
         names['features' + str(i)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
