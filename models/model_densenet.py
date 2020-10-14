@@ -173,7 +173,7 @@ class densenet(object):
         elif self.residual_layer == 264:
             self.residual_layer_list = [6, 12, 64, 48]
         else:
-            raise ValueError('[DenseNet] residual layer is invalid')
+            raise ValueError('[DenseNet] number of residual layer is invalid, try 121, 169, 201, 264')
 
     def add_layer_num(self, layer_type, layer_num):
         if layer_type == 'pool':

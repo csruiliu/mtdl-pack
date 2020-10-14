@@ -217,7 +217,7 @@ class resnet(object):
         elif self.residual_layer == 152:
             self.residual_layer_list = [3, 8, 36, 3]
         else:
-            raise ValueError('[ResNet] residual layer is invalid')
+            raise ValueError('[ResNet] number of residual layer is invalid, try 18, 34, 50, 101, 152 ')
 
     def add_layer_num(self, layer_type, layer_num):
         if layer_type == 'pool':
