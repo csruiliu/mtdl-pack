@@ -1,3 +1,5 @@
+import importlib
+
 
 class ModelImporter(object):
     def __init__(self, model_type, model_instance_name, num_layer, input_h, input_w, num_channels,
@@ -15,7 +17,7 @@ class ModelImporter(object):
         self.activation = activation
         self.batch_padding = batch_padding
 
-        import_model = __import__('model_' + self.model_type)
+        import_model = importlib.import_module('models.model_' + self.model_type)
         clazz = getattr(import_model, self.model_type)
         self.model_entity = clazz(net_name=self.model_instance_name, num_layer=self.num_layer,
                                   input_h=self.input_height, input_w=self.input_width, num_channel=self.num_channels,

@@ -1,6 +1,9 @@
 import yaml
+import os
 
-with open("config/config_path.yml", 'r') as ymlfile:
+current_folder = os.path.abspath(os.path.dirname(__file__))
+
+with open(current_folder+'/config_path.yml', 'r') as ymlfile:
     cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
 #path_cfg = cfg['local_path']
@@ -20,3 +23,5 @@ mnist_train_label_path = path_cfg['dataset_mnist_train_label']
 mnist_test_10k_img_path = path_cfg['dataset_mnist_t10k_img']
 mnist_test_10k_label_path = path_cfg['dataset_mnist_t10k_label']
 cifar_10_path = path_cfg['dataset_cifar_10_path']
+
+profile_path = path_cfg['profile_path']

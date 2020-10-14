@@ -1,8 +1,10 @@
 import tensorflow as tf
 from tensorflow.python.client import timeline
-import os
 import numpy as np
 from timeit import default_timer as timer
+import os
+import sys
+sys.path.append(os.path.abspath(".."))
 
 import config.config_parameter as cfg_para
 import config.config_path as cfg_path
@@ -15,7 +17,7 @@ def build_model():
     dm = ModelImporter(train_model_type, str(model_name_abbr.pop()), train_layer_num, img_height, img_width, num_channel,
                        num_class, train_batch_size, train_optimizer, train_learn_rate, train_activation, False)
     model_entity = dm.get_model_entity()
-    model_logit = model_entity.build(features)
+    model_logit = model_entity.build(features, is_training=True)
     train_step = model_entity.train(model_logit, labels)
 
     return train_step
@@ -159,4 +161,4 @@ if __name__ == '__main__':
 
     train_op = build_model()
 
-    train_model()
+    #train_model()

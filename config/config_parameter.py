@@ -1,6 +1,9 @@
 import yaml
+import os
 
-with open("config/config_parameter.yml", 'r') as ymlfile:
+current_folder = os.path.abspath(os.path.dirname(__file__))
+
+with open(current_folder+'/config_parameter.yml', 'r') as ymlfile:
     cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
 ##########################################

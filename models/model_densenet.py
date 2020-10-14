@@ -1,6 +1,5 @@
 import tensorflow as tf
 import tensorflow.contrib as tc
-from utils_model_func import activation_function
 
 
 # DenseNet
@@ -32,8 +31,23 @@ class densenet(object):
         self.weight_init = tc.layers.variance_scaling_initializer()
         self.weight_regularizer = tc.layers.l2_regularizer(0.0001)
 
-    def activation_layer(self, x_input, act_func):
-        return activation_function(x_input, act_func)
+    @staticmethod
+    def activation_layer(x_input, act_func):
+        new_logit = None
+        if act_func == 'relu':
+            new_logit = tf.nn.relu(x_input, 'relu')
+        elif act_func == 'leaky_relu':
+            new_logit = tf.nn.leaky_relu(x_input, alpha=0.2, name='leaky_relu')
+        elif act_func == 'tanh':
+            new_logit = tf.math.tanh(x_input, 'tanh')
+        elif act_func == 'sigmoid':
+            new_logit = tf.math.sigmoid(x_input, 'sigmoid')
+        elif act_func == 'elu':
+            new_logit = tf.nn.elu(x_input, 'elu')
+        elif act_func == 'selu':
+            new_logit = tf.nn.selu(x_input, 'selu')
+
+        return new_logit
 
     def avg_pooling_layer(self, x_input, pool_size, scope='avgpool'):
         self.add_layer_num('pool', 1)

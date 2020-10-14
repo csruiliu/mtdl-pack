@@ -14,11 +14,11 @@ hyperparams_input:
 hyperparams_single_train:
   num_epoch: 1
   random_seed: 10000
-  model_type: densenet
+  model_type: resnet
   activation: relu
   optimizer: Adam
   batch_size: 32
-  num_model_layer: 1
+  num_model_layer: 50
   learning_rate: 0.01
   train_dataset: cifar10
   use_cpu: False
