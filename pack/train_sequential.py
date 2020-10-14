@@ -18,17 +18,17 @@ def build_model():
     names = locals()
     model_name_abbr = np.random.choice(rand_seed, len(train_model_type_list), replace=False).tolist()
 
-    for tidx, mt in enumerate(train_model_type_list):
-        names['features' + str(tidx)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
-        names['labels' + str(tidx)] = tf.placeholder(tf.int64, [None, num_class])
+    for midx, mvalue in enumerate(train_model_type_list):
+        names['features' + str(midx)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+        names['labels' + str(midx)] = tf.placeholder(tf.int64, [None, num_class])
 
-        dm = ModelImporter(mt, str(model_name_abbr.pop()), train_layer_num_list[tidx], img_width, img_height,
-                           num_channel, num_class, train_batch_size_list[tidx], train_optimizer_list[tidx],
-                           train_learn_rate_list[tidx], train_activation_list[tidx], batch_padding=False)
+        dm = ModelImporter(mvalue, str(model_name_abbr.pop()), train_layer_num_list[midx], img_width, img_height,
+                           num_channel, num_class, train_batch_size_list[midx], train_optimizer_list[midx],
+                           train_learn_rate_list[midx], train_activation_list[midx], batch_padding=False)
 
         model_entity = dm.get_model_entity()
-        model_logit = model_entity.build(names['features' + str(tidx)], is_training=True)
-        train_op = model_entity.train(model_logit, names['labels' + str(tidx)])
+        model_logit = model_entity.build(names['features' + str(midx)], is_training=True)
+        train_op = model_entity.train(model_logit, names['labels' + str(midx)])
         train_collection.append(train_op)
 
     return train_collection
