@@ -34,7 +34,7 @@ def build_model():
     return train_collection
 
 
-def train_model(train_step_arg, num_epoch_arg, batch_size_arg, tidx_arg):
+def train_model(train_step_arg, batch_size_arg, tidx_arg):
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     config.allow_soft_placement = True
@@ -48,7 +48,7 @@ def train_model(train_step_arg, num_epoch_arg, batch_size_arg, tidx_arg):
         sess.run(tf.global_variables_initializer())
         num_batch = train_label.shape[0] // batch_size_arg
 
-        for e in range(num_epoch_arg):
+        for e in range(num_epoch):
             for i in range(batch_size_arg):
                 print('epoch %d / %d, step %d / %d' % (e + 1, num_epoch, i + 1, num_batch))
 
