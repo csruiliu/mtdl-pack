@@ -152,6 +152,9 @@ if __name__ == '__main__':
         test_feature = load_mnist_image(test_img_path)
         test_label = load_mnist_label_onehot(test_label_path)
 
+    else:
+        raise ValueError('Training Dataset is invaild, only support mnist, cifar10, imagenet')
+
     ###########################################################
     # Build and train model due to input dataset
     ###########################################################

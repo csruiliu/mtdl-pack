@@ -57,7 +57,6 @@ pack_train_dataset = hyperparams_pack_cfg['train_dataset']
 pack_record_marker = hyperparams_pack_cfg['record_marker']
 pack_batch_padding = hyperparams_pack_cfg['batch_padding']
 pack_use_cpu = hyperparams_pack_cfg['use_cpu']
-pack_measure_step = hyperparams_pack_cfg['measure_step']
 pack_same_input = hyperparams_pack_cfg['same_input']
 pack_use_tb_timeline = hyperparams_pack_cfg['use_tb_timeline']
 

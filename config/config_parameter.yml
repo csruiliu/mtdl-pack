@@ -49,9 +49,7 @@ hyperparams_pack_train:
     - 0.00001
     - 0.00001
   train_dataset: cifar10
-  record_marker: 3
   batch_padding: False
   use_cpu: False
   same_input: True
-  measure_step: True
   use_tb_timeline: False
