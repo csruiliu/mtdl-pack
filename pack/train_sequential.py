@@ -152,9 +152,9 @@ if __name__ == '__main__':
 
     names = globals()
 
-    for i in range(len(train_model_type_list)):
-        names['features' + str(i)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
-        names['labels' + str(i)] = tf.placeholder(tf.int64, [None, num_class])
+    for idx in range(len(train_model_type_list)):
+        names['features' + str(idx)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+        names['labels' + str(idx)] = tf.placeholder(tf.int64, [None, num_class])
 
     train_model_list = build_model()
 
