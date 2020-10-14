@@ -66,16 +66,16 @@ def train_model(train_step_arg, batch_size_arg, tidx_arg):
                     profile_path = cfg_path.profile_path
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    sess.run(train_step_arg, feed_dict={names['features' + str(tidx)]: train_feature_batch,
-                                                        names['labels' + str(tidx)]: train_label_batch},
+                    sess.run(train_step_arg, feed_dict={names['features' + str(tidx_arg)]: train_feature_batch,
+                                                        names['labels' + str(tidx_arg)]: train_label_batch},
                              options=run_options, run_metadata=run_metadata)
                     trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-                    trace_file = open(profile_path + '/' + str(train_model_type_list[tidx]) + '-'
+                    trace_file = open(profile_path + '/' + str(train_model_type_list[tidx_arg]) + '-'
                                       + str(batch_size_arg) + '-' + str(i) + '.json', 'w')
                     trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
                 else:
-                    sess.run(train_step_arg, feed_dict={names['features' + str(tidx)]: train_feature_batch,
-                                                        names['labels' + str(tidx)]: train_label_batch})
+                    sess.run(train_step_arg, feed_dict={names['features' + str(tidx_arg)]: train_feature_batch,
+                                                        names['labels' + str(tidx_arg)]: train_label_batch})
 
 
 if __name__ == '__main__':
