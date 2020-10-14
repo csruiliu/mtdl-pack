@@ -1,7 +1,5 @@
 import tensorflow as tf
 import tensorflow.contrib as tc
-from utils_model_func import activation_function
-
 
 # MobileNetV2
 class mobilenet(object):
@@ -27,16 +25,34 @@ class mobilenet(object):
         self.num_pool_layer = 0
         self.num_residual_layer = 0
 
+    @staticmethod
+    def activation_layer(x_input, act_func):
+        new_logit = None
+        if act_func == 'relu':
+            new_logit = tf.nn.relu(x_input, 'relu')
+        elif act_func == 'leaky_relu':
+            new_logit = tf.nn.leaky_relu(x_input, alpha=0.2, name='leaky_relu')
+        elif act_func == 'tanh':
+            new_logit = tf.math.tanh(x_input, 'tanh')
+        elif act_func == 'sigmoid':
+            new_logit = tf.math.sigmoid(x_input, 'sigmoid')
+        elif act_func == 'elu':
+            new_logit = tf.nn.elu(x_input, 'elu')
+        elif act_func == 'selu':
+            new_logit = tf.nn.selu(x_input, 'selu')
+
+        return new_logit
+
     def _res_block(self, input, expansion_ratio, output_dim, stride, is_train, block_name, bias=False, shortcut=True):
         with tf.variable_scope(block_name):
             bottleneck_dim = round(expansion_ratio * input.get_shape().as_list()[-1])
             net = self._conv_1x1(input, bottleneck_dim, name='pw', bias=bias)
             net = self._batch_norm(net, train=is_train, name='pw_bn')
-            net = activation_function(net, self.activation)
+            net = activation_layer(net, self.activation)
 
             net = self._dwise_conv(net, strides=[1, stride, stride, 1], name='dw', bias=bias)
             net = self._batch_norm(net, train=is_train, name='dw_bn')
-            net = activation_function(net, self.activation)
+            net = activation_layer(net, self.activation)
 
             net = self._conv_1x1(net, output_dim, name='pw_linear', bias=bias)
             net = self._batch_norm(net, train=is_train, name='pw_linear_bn')

@@ -84,11 +84,11 @@ class densenet(object):
     def bottle_dense_block(self, x_init, is_training=True, use_bias=True, scope='bottle_denseblock'):
         with tf.variable_scope(scope):
             block = self.batch_norm_layer(x_init, is_training, scope='batch_norm_0')
-            block = activation_function(block, self.activation)
+            block = self.activation_layer(block, self.activation)
             block = self.conv_layer(block, filters=self.growth_k, kernel=1, stride=1, use_bias=use_bias, scope='conv_0')
 
             block = self.batch_norm_layer(block, is_training, scope='batch_norm_1')
-            block = activation_function(block, self.activation)
+            block = self.activation_layer(block, self.activation)
             block = self.conv_layer(block, filters=self.growth_k, kernel=3, stride=1, use_bias=use_bias, scope='conv_1')
 
             return block
