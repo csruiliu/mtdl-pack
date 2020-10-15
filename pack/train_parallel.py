@@ -12,8 +12,16 @@ from models.model_importer import ModelImporter
 from utils.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
 
 
-def train_parallel(model_type_arg, model_id_arg, num_layer_arg, activation_arg, batch_size_arg, learn_rate_arg, opt_arg,
-                   num_epoch_arg, train_dataset_arg):
+def train_parallel(para_list_arg):
+    model_type_arg = para_list_arg[0]
+    model_id_arg = para_list_arg[1]
+    num_layer_arg = para_list_arg[2]
+    activation_arg = para_list_arg[3]
+    batch_size_arg = para_list_arg[4]
+    learn_rate_arg = para_list_arg[5]
+    opt_arg = para_list_arg[6]
+    num_epoch_arg = para_list_arg[7]
+    train_dataset_arg = para_list_arg[8]
 
     model_name = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(model_id_arg, model_type_arg, num_layer_arg, batch_size_arg,
                                                           learn_rate_arg, opt_arg, num_epoch_arg, train_dataset_arg)
@@ -80,7 +88,8 @@ def train_parallel(model_type_arg, model_id_arg, num_layer_arg, activation_arg, 
                     step_time += dur_time
                     step_count += 1
 
-    print('average step time (ms) of {}:{}'.format(model_name, step_time / step_count * 1000))
+    step_time_result = 'average step time (ms) of {}:{}'.format(model_name, step_time / step_count * 1000)
+    return step_time_result
 
 
 if __name__ == '__main__':
@@ -161,9 +170,9 @@ if __name__ == '__main__':
     #####################################################
 
     pool = Pool(processes=len(train_model_type_list))
-
+    proc_para_list = list()
     for tidx in range(len(train_model_type_list)):
-        para_list = []
+        para_list = list()
         para_list.append(train_model_type_list[tidx])
         para_list.append(tidx)
         para_list.append(train_layer_num_list[tidx])
@@ -174,7 +183,11 @@ if __name__ == '__main__':
         para_list.append(num_epoch)
         para_list.append(train_dataset)
 
-        pool.apply_async(train_parallel, para_list)
+        proc_para_list.append(para_list)
 
-    pool.close()
-    pool.join()
+    results = pool.map_async(train_parallel, proc_para_list)
+
+    results.wait()
+    if results.ready():
+        if results.successful():
+            print(results.get())
