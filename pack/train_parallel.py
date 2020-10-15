@@ -88,7 +88,7 @@ def train_parallel(para_list_arg):
                     step_time += dur_time
                     step_count += 1
 
-    step_time_result = 'average step time (ms) of {}:{}'.format(model_name, step_time / step_count * 1000)
+    step_time_result = 'average step time (ms) of {}: {}'.format(model_name, step_time / step_count * 1000)
     return step_time_result
 
 
@@ -185,9 +185,13 @@ if __name__ == '__main__':
 
         proc_para_list.append(para_list)
 
+    overall_start_time = timer()
     results = pool.map_async(train_parallel, proc_para_list)
     results_list = results.get()
+    overall_end_time = timer()
+    overall_dur_time = overall_end_time - overall_start_time
 
     for rvalue in results_list:
         print(rvalue)
-        
+
+    print('Overall parallel training time(s): {}'.format(overall_dur_time))
