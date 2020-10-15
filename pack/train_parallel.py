@@ -30,7 +30,7 @@ def train_parallel(para_list_arg):
     labels = tf.placeholder(tf.int64, [None, num_class])
 
     dm = ModelImporter(model_type_arg, str(model_id_arg), num_layer_arg, img_height, img_width, num_channel, num_class,
-                       batch_size_arg, opt_arg, learn_rate_arg, activation_arg)
+                       batch_size_arg, opt_arg, learn_rate_arg, activation_arg, batch_padding=False)
 
     model_entity = dm.get_model_entity()
     model_logit = model_entity.build(features, is_training=True)
@@ -186,8 +186,8 @@ if __name__ == '__main__':
         proc_para_list.append(para_list)
 
     results = pool.map_async(train_parallel, proc_para_list)
+    results_list = results.get()
 
-    results.wait()
-    if results.ready():
-        if results.successful():
-            print(results.get())
+    for rvalue in results_list:
+        print(rvalue)
+        
