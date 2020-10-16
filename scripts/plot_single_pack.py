@@ -13,8 +13,6 @@ def gen_heatmap(csv_path, csv_label, csv_label_len, output_img):
     plt.tight_layout()
     plt.savefig('/home/ruiliu/Development/mtml-tf/hyperband/'+output_img,format='pdf')
 
-def compute_variance():
-   None 
 
 if __name__ == "__main__":
     #csvlabel=('(mlp,32,Adam,1,relu)','(mlp,32,SGD,1,relu)','(mlp,128,Adam,1,relu)','(mlp,128,SGD,1,relu)','(mobilenet,32,Adam)','(mobilenet,32,SGD)','(mobilenet,128,Adam)','(mobilenet,128,SGD)','(resnet,32,Adam)','(resnet,32,SGD)','(resnet,128,Adam)','(resnet,128,SGD)','(densenet,32,Adam)','(densenet,32,SGD)','(densenet, 128,Adam)','(densenet,128,SGD)')
