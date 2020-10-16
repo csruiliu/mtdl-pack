@@ -59,3 +59,18 @@ multi_use_cpu = hyperparams_multi_cfg['use_cpu']
 multi_same_input = hyperparams_multi_cfg['same_input']
 multi_use_tb_timeline = hyperparams_multi_cfg['use_tb_timeline']
 
+##########################################
+# Hyperparameters for hyperband
+##########################################
+
+hyperparams_hyperband = cfg['hyperparams_hyperband']
+hyperband_resource_conf = hyperparams_hyperband['resource_conf']
+hyperband_down_rate = hyperparams_hyperband['down_rate']
+hyperband_pack_rate = hyperparams_hyperband['pack_rate']
+hyperband_schedule_policy = hyperparams_hyperband['schedule_policy']
+hyperband_random_seed = hyperparams_hyperband['workload_random_seed']
+hyperband_model_type_list = hyperparams_hyperband['model_type']
+hyperband_activation_list = hyperparams_hyperband['activation']
+hyperband_optimizer_list = hyperparams_hyperband['optimizer']
+hyperband_batch_size_list = hyperparams_hyperband['batch_size']
+hyperband_learn_rate_list = hyperparams_hyperband['learning_rate']
