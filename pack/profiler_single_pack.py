@@ -1,181 +1,251 @@
 import tensorflow as tf
-import config as cfg_yml
-import itertools
-from datetime import datetime
 import numpy as np
-import sys
-from multiprocessing import Process
 from timeit import default_timer as timer
-import argparse
+import itertools
 import os
+import sys
+sys.path.append(os.path.abspath(".."))
 
-from img_utils import *
-from dnn_model import DnnModel
+import config.config_parameter as cfg_para
+import config.config_path as cfg_path
+from models.model_importer import ModelImporter
+from utils.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
 
-imgWidth = cfg_yml.imgWidth
-imgHeight = cfg_yml.imgHeight
-numChannels = cfg_yml.numChannels
-numClasses = cfg_yml.numClasses
-rand_seed = cfg_yml.rand_seed
-learning_rate = cfg_yml.learning_rate[0]
-
-batch_size_global = cfg_yml.batch_size
-opt_conf_global = cfg_yml.opt_conf
-model_layer_global = cfg_yml.model_layer
-activation_global = cfg_yml.activation
-model_type_global = cfg_yml.model_type
-cifar_10_path = cfg_yml.cifar_10_path
-
-#imagenet_t1k_img_path = cfg_yml.imagenet_t1k_img_path
-#imagenet_t1k_label_path = cfg_yml.imagenet_t1k_label_path
-
-#imagenet_image_list = sorted(os.listdir(imagenet_t1k_img_path))
-#Y_data = load_imagenet_labels_onehot(imagenet_t1k_label_path, numClasses)
-X_data, Y_data = load_cifar_train(cifar_10_path)
 
 def gen_confs():
-    all_conf = [model_type_global, batch_size_global, opt_conf_global, model_layer_global, activation_global]
-    hp_conf = list(itertools.product(*all_conf))
-    return hp_conf
+    all_conf = [model_type_list, batch_size_list, opt_list, activation_list, learn_rate_list]
+    hp_workload_conf = list(itertools.product(*all_conf))
+    return hp_workload_conf
 
-def single_eval(conf_model):
-    features = tf.placeholder(tf.float32, [None, imgWidth, imgHeight, numChannels])
-    labels = tf.placeholder(tf.int64, [None, numClasses])
 
-    model_type = conf_model[0]
-    batch_size = conf_model[1]
-    opt = conf_model[2]
-    model_layer = conf_model[3]
-    activation = conf_model[4]
-    desire_steps = Y_data.shape[0] // batch_size
+def profile_single_model(job):
+    job_model_arch = job[0]
+    job_model_type = job_model_arch.split('-')[0]
+    job_num_layer = job_model_arch.split('-')[1]
+    job_batch_size = job[1]
+    job_opt = job[2]
+    job_activation = job[3]
+    job_learn_rate = job[4]
+    job_id = model_name_abbr.pop()
 
-    dt = datetime.now()
-    np.random.seed(dt.microsecond)    
-    net_instnace = np.random.randint(sys.maxsize)
+    model_name = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(job_id, job_model_type, job_num_layer, job_batch_size,
+                                                          job_learn_rate, job_opt, job_activation, train_dataset)
 
-    dm = DnnModel(model_type, str(net_instnace), model_layer, imgWidth, imgHeight, numChannels, numClasses, batch_size, opt, learning_rate, activation)
-    modelEntity = dm.getModelEntity()
-    modelEntity.setDesireEpochs(1)
-    modelEntity.setDesireSteps(desire_steps)
-    modelLogit = modelEntity.build(features)
-    trainOps = modelEntity.train(modelLogit, labels)
+    features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+    labels = tf.placeholder(tf.int64, [None, num_class])
+
+    dm = ModelImporter(job_model_type, str(job_id), job_num_layer, img_height, img_width, num_channel,
+                       num_class, job_batch_size, job_opt, job_learn_rate, job_activation, batch_padding=True)
+
+    model_entity = dm.get_model_entity()
+    model_logit = model_entity.build(features, is_training=True)
+    train_step = model_entity.train(model_logit, labels)
 
     step_time = 0
     step_count = 0
-    remark = 3
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
-    with tf.Session(config=config) as sess:
-        sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // batch_size
-        for i in range(num_batch):
-            start_time = timer() 
-            batch_offset = i * batch_size
-            batch_end = (i+1) * batch_size
-            #batch_list = imagenet_image_list[batch_offset:batch_end]
-            X_mini_batch_feed = X_data[batch_offset:batch_end,:,:,:]
-            #X_mini_batch_feed = load_imagenet_images(imagenet_t1k_img_path, batch_list, imgHeight, imgWidth)
-            Y_mini_batch_feed = Y_data[batch_offset:batch_end,:]
-            sess.run(trainOps, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
-            end_time = timer()
-            dur_time = end_time - start_time
-            if (i+1) % remark == 0:
-                #print('step %d / %d' %(i+1, num_batch))
-                step_time += dur_time
-                step_count += 1
-            
-    avg_step_time = step_time / step_count * 1000
-    print(avg_step_time)
-
-
-def pack_eval(conf_a, conf_b):
-    features = tf.placeholder(tf.float32, [None, imgWidth, imgHeight, numChannels])
-    labels = tf.placeholder(tf.int64, [None, numClasses])
-    
-    model_type_a = conf_a[0]
-    batch_size_a = conf_a[1]
-    opt_a = conf_a[2]
-    model_layer_a = conf_a[3]
-    activation_a = conf_a[4]
-    desire_steps_a = Y_data.shape[0] // batch_size_a
-
-    model_type_b = conf_b[0]
-    batch_size_b = conf_b[1]
-    opt_b = conf_b[2]
-    model_layer_b = conf_b[3]
-    activation_b = conf_b[4]
-    desire_steps_b = Y_data.shape[0] // batch_size_b
-    
-    maxBatchSize = max(batch_size_a, batch_size_b)
-
-    dt = datetime.now()
-    np.random.seed(dt.microsecond)    
-    net_instnace = np.random.randint(sys.maxsize, size=2)
-    
-    dm_a = DnnModel(model_type_a, str(net_instnace[0]), model_layer_a, imgWidth, imgHeight, numChannels, numClasses, batch_size_a, opt_a, learning_rate, activation_a)
-    modelEntity_a = dm_a.getModelEntity()
-    modelEntity_a.setDesireEpochs(1)
-    modelEntity_a.setDesireSteps(desire_steps_a)
-    modelLogit_a = modelEntity_a.build(features)
-    trainOps_a = modelEntity_a.train(modelLogit_a, labels)
-
-    dm_b = DnnModel(model_type_b, str(net_instnace[1]), model_layer_b, imgWidth, imgHeight, numChannels, numClasses, batch_size_b, opt_b, learning_rate, activation_b)
-    modelEntity_b = dm_b.getModelEntity()
-    modelEntity_b.setDesireEpochs(1)
-    modelEntity_b.setDesireSteps(desire_steps_b)
-    modelLogit_b = modelEntity_b.build(features)
-    trainOps_b = modelEntity_b.train(modelLogit_b, labels)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     config.allow_soft_placement = True
 
-    step_time = 0
-    step_count = 0
-    remark = 3
+    if train_dataset == 'imagenet':
+        image_list = sorted(os.listdir(train_img_path))
+
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
+        num_batch = train_label.shape[0] // job_batch_size
         for i in range(num_batch):
-            #print('step %d / %d' %(i+1, num_batch))
-            start_time = timer()
-            batch_offset = i * maxBatchSize
-            batch_end = (i+1) * maxBatchSize
-            #batch_list = imagenet_image_list[batch_offset:batch_end]
-            X_mini_batch_feed = X_data[batch_offset:batch_end,:,:,:]
-            #X_mini_batch_feed = load_imagenet_images(imagenet_t1k_img_path, batch_list, imgHeight, imgWidth)
-            Y_mini_batch_feed = Y_data[batch_offset:batch_end,:]
-            sess.run([trainOps_a, trainOps_b], feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
-            end_time = timer()
-            dur_time = end_time - start_time
-            if (i+1) % remark == 0:
+            print('step %d / %d' % (i + 1, num_batch))
+
+            if i != 0:
+                start_time = timer()
+
+            batch_offset = i * job_batch_size
+            batch_end = (i + 1) * job_batch_size
+
+            if train_dataset == 'imagenet':
+                batch_list = image_list[batch_offset:batch_end]
+                train_feature_batch = load_imagenet_raw(train_img_path, batch_list, img_height, img_width)
+            else:
+                train_feature_batch = train_feature[batch_offset:batch_end]
+
+            train_label_batch = train_label[batch_offset:batch_end]
+
+            sess.run(train_step, feed_dict={features: train_feature_batch, labels: train_label_batch})
+
+            if i != 0:
+                end_time = timer()
+                dur_time = end_time - start_time
+                print("step time:", dur_time)
                 step_time += dur_time
                 step_count += 1
 
     avg_step_time = step_time / step_count * 1000
-    print(avg_step_time)
+    print('Job {}: {}'.format(model_name, avg_step_time))
+
+
+def profile_pack_model(job_a, job_b):
+    job_model_arch_a = job_a[0]
+    job_model_type_a = job_model_arch_a.split('-')[0]
+    job_num_layer_a = job_model_arch_a.split('-')[1]
+    job_batch_size_a = job_a[1]
+    job_opt_a = job_a[2]
+    job_activation_a = job_a[3]
+    job_learn_rate_a = job_a[4]
+    job_id_a = model_name_abbr.pop()
+
+    model_name_a = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(job_id_a, job_model_type_a, job_num_layer_a,
+                                                            job_batch_size_a, job_learn_rate_a, job_opt_a,
+                                                            job_activation_a, train_dataset)
+
+    job_model_arch_b = job_b[0]
+    job_model_type_b = job_model_arch_b.split('-')[0]
+    job_num_layer_b = job_model_arch_b.split('-')[1]
+    job_batch_size_b = job_b[1]
+    job_opt_b = job_b[2]
+    job_activation_b = job_b[3]
+    job_learn_rate_b = job_b[4]
+    job_id_b = model_name_abbr.pop()
+
+    model_name_b = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(job_id_b, job_model_type_b, job_num_layer_b,
+                                                            job_batch_size_b, job_learn_rate_b, job_opt_b,
+                                                            job_activation_b, train_dataset)
+
+    max_batch_size = max(job_batch_size_a, job_batch_size_b)
+
+    features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+    labels = tf.placeholder(tf.int64, [None, num_class])
+
+    dm_a = ModelImporter(job_model_type_a, str(job_id_a), job_num_layer_a, img_height, img_width, num_channel,
+                         num_class, job_batch_size_a, job_opt_a, job_learn_rate_a, job_activation_a, batch_padding=True)
+    model_entity_a = dm_a.get_model_entity()
+    model_logit_a = model_entity_a.build(features, is_training=True)
+    train_step_a = model_entity_a.train(model_logit_a, labels)
+
+    dm_b = ModelImporter(job_model_type_b, str(job_id_b), job_num_layer_b, img_height, img_width, num_channel,
+                         num_class, job_batch_size_b, job_opt_b, job_learn_rate_b, job_activation_b, batch_padding=True)
+    model_entity_b = dm_b.get_model_entity()
+    model_logit_b = model_entity_b.build(features, is_training=True)
+    train_step_b = model_entity_b.train(model_logit_b, labels)
+
+    step_time = 0
+    step_count = 0
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.allow_soft_placement = True
+
+    if train_dataset == 'imagenet':
+        image_list = sorted(os.listdir(train_img_path))
+
+    with tf.Session(config=config) as sess:
+        sess.run(tf.global_variables_initializer())
+        num_batch = train_label.shape[0] // max_batch_size
+        for i in range(num_batch):
+            print('step %d / %d' % (i + 1, num_batch))
+
+            if i != 0:
+                start_time = timer()
+
+            batch_offset = i * max_batch_size
+            batch_end = (i + 1) * max_batch_size
+
+            if train_dataset == 'imagenet':
+                batch_list = image_list[batch_offset:batch_end]
+                train_feature_batch = load_imagenet_raw(train_img_path, batch_list, img_height, img_width)
+            else:
+                train_feature_batch = train_feature[batch_offset:batch_end]
+
+            train_label_batch = train_label[batch_offset:batch_end]
+
+            sess.run([train_step_a, train_step_b], feed_dict={features: train_feature_batch, labels: train_label_batch})
+
+            if i != 0:
+                end_time = timer()
+                dur_time = end_time - start_time
+                print("step time:", dur_time)
+                step_time += dur_time
+                step_count += 1
+
+    avg_step_time = step_time / step_count * 1000
+    print('Pack {} and {}: {}'.format(model_name_a, model_name_b, avg_step_time))
+
 
 if __name__ == "__main__":
-    conf_list = gen_confs()
-    #print(conf_list)
-    #print(len(conf_list))
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--packmode", action="store_true", default=False, help="use pack or single")
-    parser.add_argument('--pack', help='indicate pack model id')
-    parser.add_argument('--single', help='indicate pack model id')
-    args = parser.parse_args()
+    ##########################################
+    # Hyperparameters
+    ##########################################
 
-    packmode = args.packmode
-    if packmode == True:
-        pack_list = args.pack
-        conf_a_idx = pack_list.split(',')[0]
-        conf_b_idx = pack_list.split(',')[1]
-        conf_a = conf_list[int(conf_a_idx)]
-        conf_b = conf_list[int(conf_b_idx)]
-        pack_eval(conf_a, conf_b)
+    rand_seed_hyperband = 10000
 
-    else:
-        single_model_idx = args.single
-        conf_model = conf_list[int(single_model_idx)]
-        single_eval(conf_model)
+    train_dataset = 'cifar10'
+    model_type_list = ['densenet-121', 'resnet-50', 'mobilenet-1', 'mlp-1']
+    batch_size_list = [32, 50, 64, 100]
+    opt_list = ['Adam', 'SGD', 'Adagrad', 'Momentum']
+    activation_list = ['sigmoid', 'leaky_relu', 'tanh', 'relu']
+    learn_rate_list = [0.01, 0.001, 0.0001, 0.00001]
+
+    #################################################
+    # Hyperparameters due to dataset
+    #################################################
+
+    img_width = 0
+    img_height = 0
+    num_class = 0
+    num_channel = 0
+
+    if train_dataset == 'imagenet':
+        train_img_path = cfg_path.imagenet_t50k_img_raw_path
+        train_label_path = cfg_path.imagenet_t50k_label_path
+        test_img_path = cfg_path.imagenet_t1k_img_raw_path
+        test_label_path = cfg_path.imagenet_t1k_label_path
+
+        img_width = cfg_para.img_width_imagenet
+        img_height = cfg_para.img_height_imagenet
+        num_channel = cfg_para.num_channels_rgb
+        num_class = cfg_para.num_class_imagenet
+
+        train_label = load_imagenet_labels_onehot(train_label_path, num_class)
+        test_label = load_imagenet_labels_onehot(test_label_path, num_class)
+
+    elif train_dataset == 'cifar10':
+        img_width = cfg_para.img_width_cifar10
+        img_height = cfg_para.img_height_cifar10
+        num_channel = cfg_para.num_channels_rgb
+        num_class = cfg_para.num_class_cifar10
+
+        train_feature, train_label, test_feature, test_label = load_cifar10_keras()
+
+    elif train_dataset == 'mnist':
+        img_width = cfg_para.img_width_mnist
+        img_height = cfg_para.img_height_mnist
+        num_channel = cfg_para.num_channels_bw
+        num_class = cfg_para.num_class_mnist
+
+        train_img_path = cfg_path.mnist_train_img_path
+        train_label_path = cfg_path.mnist_train_label_path
+        test_img_path = cfg_path.mnist_test_10k_img_path
+        test_label_path = cfg_path.mnist_test_10k_label_path
+
+        train_feature = load_mnist_image(train_img_path)
+        train_label = load_mnist_image(test_img_path)
+        test_feature = load_mnist_image(test_img_path)
+        test_label = load_mnist_label_onehot(test_label_path)
+
+    hyperband_conf_list = gen_confs()
+    model_name_abbr = np.random.choice(rand_seed_hyperband, len(hyperband_conf_list), replace=False).tolist()
+
+    ############################################
+    # profile single model
+    ############################################
+
+    for job_conf in hyperband_conf_list:
+        profile_single_model(job_conf)
+
+    ############################################
+    # profile pack model
+    ############################################
+
+    for job_conf_a in hyperband_conf_list:
+        for job_conf_b in hyperband_conf_list:
+            profile_pack_model(job_conf_a, job_conf_b)

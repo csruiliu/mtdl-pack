@@ -58,15 +58,23 @@ hyperparams_hyperband:
   resource_conf: 81
   down_rate: 3
   pack_rate: 9
+  train_dataset: cifar10
   # policy: none, random, bs, knn
   schedule_policy: none
   # parameters for generating workload
   workload_random_seed: 10000
   model_type:
-    - densenet
-    - resnet
-    - mobilenet
-    - mlp
+    - densenet-121
+    - densenet-169
+    - densenet-201
+    - densenet-264
+    - resnet-18
+    - resnet-34
+    - resnet-50
+    - resnet-101
+    - resnet-152
+    - mobilenet-1
+    - mlp-1
   activation:
     - sigmoid
     - leaky_relu
