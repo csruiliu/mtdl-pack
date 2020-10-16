@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from timeit import default_timer as timer
 import itertools
+from datetime import datetime
 import os
 import sys
 sys.path.append(os.path.abspath(".."))
@@ -21,20 +22,23 @@ def gen_confs():
 def profile_single_model(job):
     job_model_arch = job[0]
     job_model_type = job_model_arch.split('-')[0]
-    job_num_layer = job_model_arch.split('-')[1]
+    job_num_layer = int(job_model_arch.split('-')[1])
     job_batch_size = job[1]
     job_opt = job[2]
     job_activation = job[3]
     job_learn_rate = job[4]
-    job_id = model_name_abbr.pop()
 
-    model_name = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(job_id, job_model_type, job_num_layer, job_batch_size,
+    dt = datetime.now()
+    np.random.seed(dt.microsecond)
+    net_instnace = np.random.randint(sys.maxsize)
+
+    model_name = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(net_instnace, job_model_type, job_num_layer, job_batch_size,
                                                           job_learn_rate, job_opt, job_activation, train_dataset)
 
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
-    dm = ModelImporter(job_model_type, str(job_id), job_num_layer, img_height, img_width, num_channel,
+    dm = ModelImporter(job_model_type, str(net_instnace), job_num_layer, img_height, img_width, num_channel,
                        num_class, job_batch_size, job_opt, job_learn_rate, job_activation, batch_padding=True)
 
     model_entity = dm.get_model_entity()
@@ -87,42 +91,42 @@ def profile_single_model(job):
 def profile_pack_model(job_a, job_b):
     job_model_arch_a = job_a[0]
     job_model_type_a = job_model_arch_a.split('-')[0]
-    job_num_layer_a = job_model_arch_a.split('-')[1]
+    job_num_layer_a = int(job_model_arch_a.split('-')[1])
     job_batch_size_a = job_a[1]
     job_opt_a = job_a[2]
     job_activation_a = job_a[3]
     job_learn_rate_a = job_a[4]
-    job_id_a = model_name_abbr.pop()
 
-    model_name_a = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(job_id_a, job_model_type_a, job_num_layer_a,
-                                                            job_batch_size_a, job_learn_rate_a, job_opt_a,
-                                                            job_activation_a, train_dataset)
+    model_name_a = '{0}-{1}-{2}-{3}-{4}-{5}-{6}'.format(job_model_type_a, job_num_layer_a, job_batch_size_a,
+                                                        job_learn_rate_a, job_opt_a, job_activation_a, train_dataset)
 
     job_model_arch_b = job_b[0]
     job_model_type_b = job_model_arch_b.split('-')[0]
-    job_num_layer_b = job_model_arch_b.split('-')[1]
+    job_num_layer_b = int(job_model_arch_b.split('-')[1])
     job_batch_size_b = job_b[1]
     job_opt_b = job_b[2]
     job_activation_b = job_b[3]
     job_learn_rate_b = job_b[4]
-    job_id_b = model_name_abbr.pop()
 
-    model_name_b = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(job_id_b, job_model_type_b, job_num_layer_b,
-                                                            job_batch_size_b, job_learn_rate_b, job_opt_b,
-                                                            job_activation_b, train_dataset)
+    model_name_b = '{0}-{1}-{2}-{3}-{4}-{5}-{6}'.format(job_model_type_b, job_num_layer_b, job_batch_size_b,
+                                                        job_learn_rate_b, job_opt_b, job_activation_b, train_dataset)
 
     max_batch_size = max(job_batch_size_a, job_batch_size_b)
+
+    dt = datetime.now()
+    np.random.seed(dt.microsecond)
+    net_instnace = np.random.randint(sys.maxsize, size=2)
 
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
-    dm_a = ModelImporter(job_model_type_a, str(job_id_a), job_num_layer_a, img_height, img_width, num_channel,
+    dm_a = ModelImporter(job_model_type_a, str(net_instnace[0]), job_num_layer_a, img_height, img_width, num_channel,
                          num_class, job_batch_size_a, job_opt_a, job_learn_rate_a, job_activation_a, batch_padding=True)
     model_entity_a = dm_a.get_model_entity()
     model_logit_a = model_entity_a.build(features, is_training=True)
     train_step_a = model_entity_a.train(model_logit_a, labels)
 
-    dm_b = ModelImporter(job_model_type_b, str(job_id_b), job_num_layer_b, img_height, img_width, num_channel,
+    dm_b = ModelImporter(job_model_type_b, str(net_instnace[1]), job_num_layer_b, img_height, img_width, num_channel,
                          num_class, job_batch_size_b, job_opt_b, job_learn_rate_b, job_activation_b, batch_padding=True)
     model_entity_b = dm_b.get_model_entity()
     model_logit_b = model_entity_b.build(features, is_training=True)
@@ -233,7 +237,6 @@ if __name__ == "__main__":
         test_label = load_mnist_label_onehot(test_label_path)
 
     hyperband_conf_list = gen_confs()
-    model_name_abbr = np.random.choice(rand_seed_hyperband, len(hyperband_conf_list), replace=False).tolist()
 
     ############################################
     # profile single model
