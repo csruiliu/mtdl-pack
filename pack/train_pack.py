@@ -1,455 +1,265 @@
-from __future__ import division
 import tensorflow as tf
 from tensorflow.python.client import timeline
-import os
 import numpy as np
 from timeit import default_timer as timer
+import os
+import sys
+sys.path.append(os.path.abspath(".."))
 
-import config as cfg_yml
-from dnn_model import DnnModel
-from img_utils import *
+import config.config_parameter as cfg_para
+import config.config_path as cfg_path
+from models.model_importer import ModelImporter
+from utils.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
 
 
-def buildModels():
-    model_name_abbr = np.random.choice(randSeed, len(trainModel), replace=False).tolist()
-    trainOpCollection = list()
+def build_model_pack():
+    model_name_abbr = np.random.choice(rand_seed_pack, len(train_model_type_list), replace=False).tolist()
+    train_step_list = list()
 
-    for idx, mt in enumerate(trainModel):
-        dm = DnnModel(mt, str(model_name_abbr.pop()), trainNumLayer[idx], imgHeight, imgWidth, numChannels, numClasses,
-                      trainBatchSize[idx], trainOptimizer[idx], trainLearnRate[idx], trainActivation[idx], batchPadding)
-        modelEntity = dm.getModelEntity()
+    for midx, mt in enumerate(train_model_type_list):
+        dm = ModelImporter(mt, str(model_name_abbr.pop()), train_layer_num_list[midx], img_height, img_width,
+                           num_channel, num_class, train_batch_size_list[midx], train_optimizer_list[midx],
+                           train_learn_rate_list[midx], train_activation_list[midx], batch_padding=True)
 
-        if sameInput:
-            modelLogit = modelEntity.build(features)
-            trainStep = modelEntity.train(modelLogit, labels)
+        model_entity = dm.get_model_entity()
+
+        if is_same_input:
+            model_logit = model_entity.build(features, is_training=True)
+            train_step = model_entity.train(model_logit, labels)
         else:
-            modelLogit = modelEntity.build(names['features' + str(idx)])
-            trainStep = modelEntity.train(modelLogit, names['labels' + str(idx)])
+            model_logit = model_entity.build(names['features' + str(midx)], is_training=True)
+            train_step = model_entity.train(model_logit, names['labels' + str(midx)])
 
-        trainOpCollection.append(trainStep)
+        train_step_list.append(train_step)
 
-    return trainOpCollection
+    return train_step_list
 
-def profileStepRawImageSameInput():
-    step_time = 0
-    step_count = 0
+
+def train_model_pack_same_input():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     config.allow_soft_placement = True
-    image_list = sorted(os.listdir(image_path_raw))
+
+    step_time = 0
+    step_count = 0
+
+    if train_dataset == 'imagenet':
+        image_list = sorted(os.listdir(train_img_path))
+
+    overall_time_start = timer()
 
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
+        num_batch = train_label.shape[0] // max_batch_size
 
-        for e in range(numEpochs):
+        for e in range(num_epoch):
             for i in range(num_batch):
-                print('epoch %d / %d, step %d / %d' % (e + 1, numEpochs, i + 1, num_batch))
-                if (i + 1) % recordMarker == 0:
+                print('epoch %d / %d, step %d / %d' % (e + 1, num_epoch, i + 1, num_batch))
+
+                if i != 0:
                     start_time = timer()
-                    batch_offset = i * maxBatchSize
-                    batch_end = (i + 1) * maxBatchSize
+
+                batch_offset = i * max_batch_size
+                batch_end = (i + 1) * max_batch_size
+                if train_dataset == 'imagenet':
                     batch_list = image_list[batch_offset:batch_end]
-                    X_mini_batch_feed = load_imagenet_raw(image_path_raw, batch_list, imgHeight, imgWidth)
-                    Y_mini_batch_feed = Y_data[batch_offset:batch_end, :]
+                    train_feature_batch = load_imagenet_raw(train_img_path, batch_list, img_height, img_width)
+                else:
+                    train_feature_batch = train_feature[batch_offset:batch_end]
 
-                    if useTimeline:
-                        profile_path = cfg_yml.profile_path
-                        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                        run_metadata = tf.RunMetadata()
-                        sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed},
-                                 options=run_options, run_metadata=run_metadata)
-                        trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-                        trace_file = open(profile_path + '/' + '-'.join(map(str, set(trainModel))) + '-' + str(len(trainModel)) + '-' + '-'.join(map(str, set(trainBatchSize))) + '-' + str(i) + '.json', 'w')
-                        trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
-                    else:
-                        sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
+                train_label_batch = train_label[batch_offset:batch_end]
 
+                if use_tf_timeline:
+                    profile_path = cfg_path.profile_path
+                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                    run_metadata = tf.RunMetadata()
+
+                    sess.run(pack_model, feed_dict={features: train_feature_batch, labels: train_label_batch},
+                             options=run_options, run_metadata=run_metadata)
+
+                    trace = timeline.Timeline(step_stats=run_metadata.step_stats)
+                    trace_file = open(profile_path + '/' + '-'.join(map(str, set(train_model_type_list))) + '-' +
+                                      str(len(train_model_type_list)) + '-' +
+                                      '-'.join(map(str, set(train_batch_size_list))) + '-' + str(i) + '.json', 'w')
+                    trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
+                else:
+                    sess.run(pack_model, feed_dict={features: train_feature_batch, labels: train_label_batch})
+
+                if i != 0:
                     end_time = timer()
                     dur_time = end_time - start_time
                     print("step time:", dur_time)
                     step_time += dur_time
                     step_count += 1
 
-                else:
-                    batch_offset = i * maxBatchSize
-                    batch_end = (i + 1) * maxBatchSize
-                    batch_list = image_list[batch_offset:batch_end]
-                    X_mini_batch_feed = load_imagenet_raw(image_path_raw, batch_list, imgHeight, imgWidth)
-                    Y_mini_batch_feed = Y_data[batch_offset:batch_end, :]
-                    sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
+    overall_time_end = timer()
+    overall_time = overall_time_end - overall_time_start
 
-    print("average step time (ms):", step_time / step_count * 1000)
+    print('overall training time (s):{}, average step time (ms):{}'.format(overall_time, step_time / step_count * 1000))
 
-def profileStepRawImageDiffInput():
+
+def train_model_pack_diff_input():
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.allow_soft_placement = True
+
     step_time = 0
     step_count = 0
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
 
-    image_list = sorted(os.listdir(image_path_raw))
-    input_model_num = len(trainOpPack)
+    if train_dataset == 'imagenet':
+        image_list = sorted(os.listdir(train_img_path))
+
+    input_model_num = len(pack_model)
     input_dict = dict()
+
+    overall_time_start = timer()
 
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
-        num_batch_list = np.arange(num_batch)
+        num_batch = train_label.shape[0] // max_batch_size
 
-        for e in range(numEpochs):
+        for e in range(num_epoch):
             for i in range(num_batch):
-                print('epoch %d / %d, step %d / %d' % (e + 1, numEpochs, i + 1, num_batch))
+                print('epoch %d / %d, step %d / %d' % (e + 1, num_epoch, i + 1, num_batch))
 
-                if (i + 1) % recordMarker == 0:
+                if i != 0:
                     start_time = timer()
-                    for ridx in range(input_model_num):
-                        rand_idx = int(np.random.choice(num_batch_list, 1))
-                        batch_offset = rand_idx * maxBatchSize
-                        batch_end = (rand_idx + 1) * maxBatchSize
-                        batch_list = image_list[batch_offset:batch_end]
-                        names['X_mini_batch_feed' + str(ridx)] = load_imagenet_raw(image_path_raw, batch_list, imgHeight, imgWidth)
-                        names['Y_mini_batch_feed' + str(ridx)] = Y_data[batch_offset:batch_end, :]
-                        input_dict[names['features' + str(ridx)]] = names['X_mini_batch_feed' + str(ridx)]
-                        input_dict[names['labels' + str(ridx)]] = names['Y_mini_batch_feed' + str(ridx)]
 
-                    if useTimeline:
-                        profile_path = cfg_yml.profile_path
-                        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                        run_metadata = tf.RunMetadata()
-                        sess.run(trainOpPack, feed_dict=input_dict, options=run_options, run_metadata=run_metadata)
-                        trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-                        trace_file = open(profile_path + '/' + '-'.join(map(str, set(trainModel))) + '-' + str(len(trainModel)) + '-' + '-'.join(map(str, set(trainBatchSize))) + '-' + str(i) + '.json', 'w')
-                        trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
-                    else:
-                        sess.run(trainOpPack, feed_dict=input_dict)
-
-                    end_time = timer()
-                    dur_time = end_time - start_time
-                    print("step time:", dur_time)
-                    step_time += dur_time
-                    step_count += 1
-                else:
-                    for ridx in range(input_model_num):
-                        rand_idx = int(np.random.choice(num_batch_list, 1))
-                        batch_offset = rand_idx * maxBatchSize
-                        batch_end = (rand_idx + 1) * maxBatchSize
-                        batch_list = image_list[batch_offset:batch_end]
-                        names['X_mini_batch_feed' + str(ridx)] = load_imagenet_raw(image_path_raw, batch_list, imgHeight, imgWidth)
-                        names['Y_mini_batch_feed' + str(ridx)] = Y_data[batch_offset:batch_end, :]
-                        input_dict[names['features' + str(ridx)]] = names['X_mini_batch_feed' + str(ridx)]
-                        input_dict[names['labels' + str(ridx)]] = names['Y_mini_batch_feed' + str(ridx)]
-                    sess.run(trainOpPack, feed_dict=input_dict)
-
-    print("average step time (ms):", step_time / step_count * 1000)
-
-
-def profileEpochRawImageSameInput():
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
-
-    image_list = sorted(os.listdir(image_path_raw))
-
-    with tf.Session(config=config) as sess:
-        sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
-
-        start_time = timer()
-        for e in range(numEpochs):
-            for i in range(num_batch):
-                print('epoch %d / %d, step %d / %d' % (e + 1, numEpochs, i + 1, num_batch))
-
-                start_time = timer()
-                batch_offset = i * maxBatchSize
-                batch_end = (i + 1) * maxBatchSize
-                batch_list = image_list[batch_offset:batch_end]
-                X_mini_batch_feed = load_imagenet_raw(image_path_raw, batch_list, imgHeight, imgWidth)
-                Y_mini_batch_feed = Y_data[batch_offset:batch_end, :]
-                sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
-
-        end_time = timer()
-        dur_time = end_time - start_time
-        print("training time ({} epoch): {} seconds".format(numEpochs, dur_time))
-
-
-def profileEpochRawImageDiffInput():
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
-
-    image_list = sorted(os.listdir(image_path_raw))
-    input_model_num = len(trainOpPack)
-    input_dict = dict()
-
-    with tf.Session(config=config) as sess:
-        sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
-        num_batch_list = np.arange(num_batch)
-
-        start_time = timer()
-        for e in range(numEpochs):
-            for i in range(num_batch):
-                print('epoch %d / %d, step %d / %d' % (e + 1, numEpochs, i + 1, num_batch))
                 for ridx in range(input_model_num):
-                    rand_idx = int(np.random.choice(num_batch_list, 1))
-                    batch_offset = rand_idx * maxBatchSize
-                    batch_end = (rand_idx + 1) * maxBatchSize
+                    batch_offset = i * max_batch_size
+                    batch_end = (i + 1) * max_batch_size
                     batch_list = image_list[batch_offset:batch_end]
-                    names['X_mini_batch_feed' + str(ridx)] = load_imagenet_raw(image_path_raw, batch_list, imgHeight, imgWidth)
-                    names['Y_mini_batch_feed' + str(ridx)] = Y_data[batch_offset:batch_end, :]
-                    input_dict[names['features' + str(ridx)]] = names['X_mini_batch_feed' + str(ridx)]
-                    input_dict[names['labels' + str(ridx)]] = names['Y_mini_batch_feed' + str(ridx)]
-                sess.run(trainOpPack, feed_dict=input_dict)
+                    names['train_feature_batch' + str(ridx)] = load_imagenet_raw(train_img_path, batch_list,
+                                                                                 img_height, img_width)
+                    names['train_label_batch' + str(ridx)] = train_feature[batch_offset:batch_end, :]
+                    input_dict[names['features' + str(ridx)]] = names['train_feature_batch' + str(ridx)]
+                    input_dict[names['labels' + str(ridx)]] = names['train_label_batch' + str(ridx)]
 
-        end_time = timer()
-        dur_time = end_time - start_time
-        print("training time ({} epoch): {} seconds".format(numEpochs, dur_time))
+                if use_tf_timeline:
+                    profile_path = cfg_path.profile_path
+                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                    run_metadata = tf.RunMetadata()
 
+                    sess.run(pack_model, feed_dict=input_dict, options=run_options, run_metadata=run_metadata)
 
-def profileStepSameInput():
-    step_time = 0
-    step_count = 0
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
+                    trace = timeline.Timeline(step_stats=run_metadata.step_stats)
+                    trace_file = open(profile_path + '/' + '-'.join(map(str, set(train_model_type_list))) + '-' +
+                                      str(len(train_model_type_list)) + '-' +
+                                      '-'.join(map(str, set(train_batch_size_list))) + '-' + str(i) + '.json', 'w')
+                    trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
+                else:
+                    sess.run(pack_model, feed_dict=input_dict)
 
-    with tf.Session(config=config) as sess:
-        sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
-
-        for e in range(numEpochs):
-            for i in range(num_batch):
-                if (i + 1) % recordMarker == 0:
-                    start_time = timer()
-                    batch_offset = i * maxBatchSize
-                    batch_end = (i + 1) * maxBatchSize
-                    X_mini_batch_feed = X_data[batch_offset:batch_end, :, :, :]
-                    Y_mini_batch_feed = Y_data[batch_offset:batch_end, :]
-
-                    if useTimeline:
-                        profile_path = cfg_yml.profile_path
-                        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                        run_metadata = tf.RunMetadata()
-                        sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed}, options=run_options, run_metadata=run_metadata)
-                        trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-                        trace_file = open(profile_path + '/' + '-'.join(map(str, set(trainModel))) + '-' + str(len(trainModel)) + '-' + '-'.join(map(str, set(trainBatchSize))) + '-' + str(i) + '.json', 'w')
-                        trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
-                    else:
-                        sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
-
+                if i != 0:
                     end_time = timer()
                     dur_time = end_time - start_time
                     print("step time:", dur_time)
                     step_time += dur_time
                     step_count += 1
 
-                else:
-                    batch_offset = i * maxBatchSize
-                    batch_end = (i + 1) * maxBatchSize
-                    X_mini_batch_feed = X_data[batch_offset:batch_end, :, :, :]
-                    Y_mini_batch_feed = Y_data[batch_offset:batch_end, :]
-                    sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
+    overall_time_end = timer()
+    overall_time = overall_time_end - overall_time_start
 
-    print("average step time (ms):", step_time / step_count * 1000)
-    
-
-def profileStepDiffInput():
-    step_time = 0
-    step_count = 0
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
-
-    input_model_num = len(trainOpPack)
-    input_dict = dict()
-
-    with tf.Session(config=config) as sess:
-        sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
-        num_batch_list = np.arange(num_batch)
-
-        for e in range(numEpochs):
-            for i in range(num_batch):
-                if (i + 1) % recordMarker == 0:
-                    start_time = timer()
-                    for ridx in range(input_model_num):
-                        rand_idx = int(np.random.choice(num_batch_list, 1))
-                        batch_offset = rand_idx * maxBatchSize
-                        batch_end = (rand_idx + 1) * maxBatchSize
-                        names['X_mini_batch_feed' + str(ridx)] = X_data[batch_offset:batch_end, :, :, :]
-                        names['Y_mini_batch_feed' + str(ridx)] = Y_data[batch_offset:batch_end, :]
-                        input_dict[names['features' + str(ridx)]] = names['X_mini_batch_feed' + str(ridx)]
-                        input_dict[names['labels' + str(ridx)]] = names['Y_mini_batch_feed' + str(ridx)]
-
-                    if useTimeline:
-                        profile_path = cfg_yml.profile_path
-                        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                        run_metadata = tf.RunMetadata()
-                        sess.run(trainOpPack, feed_dict=input_dict, options=run_options, run_metadata=run_metadata)
-                        trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-                        trace_file = open(profile_path + '/' + '-'.join(map(str, set(trainModel))) + '-' + str(len(trainModel)) + '-' + '-'.join(map(str, set(trainBatchSize))) + '-' + str(i) + '.json', 'w')
-                        trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
-                    else:
-                        sess.run(trainOpPack, feed_dict=input_dict)
-
-                    end_time = timer()
-                    dur_time = end_time - start_time
-                    print("step time:", dur_time)
-                    step_time += dur_time
-                    step_count += 1
-
-                else:
-                    for ridx in range(input_model_num):
-                        rand_idx = int(np.random.choice(num_batch_list, 1))
-                        batch_offset = rand_idx * maxBatchSize
-                        batch_end = (rand_idx + 1) * maxBatchSize
-                        names['X_mini_batch_feed' + str(ridx)] = X_data[batch_offset:batch_end, :, :, :]
-                        names['Y_mini_batch_feed' + str(ridx)] = Y_data[batch_offset:batch_end, :]
-                        input_dict[names['features' + str(ridx)]] = names['X_mini_batch_feed' + str(ridx)]
-                        input_dict[names['labels' + str(ridx)]] = names['Y_mini_batch_feed' + str(ridx)]
-
-                    sess.run(trainOpPack, feed_dict=input_dict)
-    
-    print("average step time (ms):", step_time / step_count * 1000)
-
-def profileEpochSameInput():
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
-
-    with tf.Session(config=config) as sess:
-        sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
-        start_time = timer()
-        for e in range(numEpochs):
-            for i in range(num_batch):
-                print('epoch %d / %d, step %d / %d' % (e + 1, numEpochs, i + 1, num_batch))
-                batch_offset = i * maxBatchSize
-                batch_end = (i + 1) * maxBatchSize
-                X_mini_batch_feed = X_data[batch_offset:batch_end, :, :, :]
-                Y_mini_batch_feed = Y_data[batch_offset:batch_end, :]
-                sess.run(trainOpPack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
-
-        end_time = timer()
-        dur_time = end_time - start_time
-        print("training time ({} epoch): {} seconds".format(numEpochs, dur_time))
-
-
-def profileEpochDiffInput():
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
-
-    input_model_num = len(trainOpPack)
-    input_dict = dict()
-
-    with tf.Session(config=config) as sess:
-        sess.run(tf.global_variables_initializer())
-        num_batch = Y_data.shape[0] // maxBatchSize
-        num_batch_list = np.arange(num_batch)
-
-        start_time = timer()
-        for e in range(numEpochs):
-            for i in range(num_batch):
-                print('epoch %d / %d, step %d / %d' % (e + 1, numEpochs, i + 1, num_batch))
-                for ridx in range(input_model_num):
-                    rand_idx = int(np.random.choice(num_batch_list, 1))
-                    batch_offset = rand_idx * maxBatchSize
-                    batch_end = (rand_idx + 1) * maxBatchSize
-                    names['X_mini_batch_feed' + str(ridx)] = X_data[batch_offset:batch_end, :, :, :]
-                    names['Y_mini_batch_feed' + str(ridx)] = Y_data[batch_offset:batch_end, :]
-                    input_dict[names['features' + str(ridx)]] = names['X_mini_batch_feed' + str(ridx)]
-                    input_dict[names['labels' + str(ridx)]] = names['Y_mini_batch_feed' + str(ridx)]
-
-                sess.run(trainOpPack, feed_dict=input_dict)
-        end_time = timer()
-        dur_time = end_time - start_time
-        print("training time ({} epoch): {} seconds".format(numEpochs, dur_time))
-
+    print('overall training time (s):{}, average step time (ms):{}'.format(overall_time, step_time / step_count * 1000))
 
 
 if __name__ == '__main__':
 
-    #########################
-    # Parameters
-    #########################
+    ##########################################
+    # Hyperparameters read from config
+    ##########################################
 
-    imgWidth = cfg_yml.pack_img_width
-    imgHeight = cfg_yml.pack_img_height
-    numChannels = cfg_yml.pack_num_channels
-    numClasses = cfg_yml.pack_num_classes
-    numEpochs = cfg_yml.pack_num_epoch
-    trainModel = cfg_yml.pack_model_type
-    trainBatchSize = cfg_yml.pack_batch_size
-    trainOptimizer = cfg_yml.pack_opt
-    randSeed = cfg_yml.pack_rand_seed
-    trainNumLayer = cfg_yml.pack_num_layer
-    trainLearnRate = cfg_yml.pack_learning_rate
-    trainActivation = cfg_yml.pack_activation
+    rand_seed_pack = cfg_para.multi_rand_seed
 
-    batchPadding = cfg_yml.pack_batch_padding
-    useRawImage = cfg_yml.pack_use_raw_image
-    measureStep = cfg_yml.pack_measure_step
-    useCPU = cfg_yml.pack_use_cpu
-    sameInput = cfg_yml.pack_same_input
-    recordMarker = cfg_yml.pack_record_marker
-    useTimeline = cfg_yml.pack_use_tb_timeline
+    train_model_type_list = cfg_para.multi_model_type
+    train_optimizer_list = cfg_para.multi_opt
+    train_layer_num_list = cfg_para.multi_num_layer
+    train_activation_list = cfg_para.multi_activation
+    train_batch_size_list = cfg_para.multi_batch_size
+    train_learn_rate_list = cfg_para.multi_learning_rate
 
-    maxBatchSize = max(trainBatchSize)
-    numTrainModel = len(trainModel)
+    num_epoch = cfg_para.multi_num_epoch
+    train_dataset = cfg_para.multi_train_dataset
 
-    if useCPU:
+    is_batch_padding = cfg_para.multi_batch_padding
+    is_same_input = cfg_para.multi_same_input
+
+    use_tf_timeline = cfg_para.multi_use_tb_timeline
+    use_cpu = cfg_para.multi_use_cpu
+
+    if use_cpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+    max_batch_size = max(train_batch_size_list)
+    num_train_model = len(train_model_type_list)
+
+    #################################################
+    # Hyperparameters due to dataset
+    #################################################
+
+    img_width = 0
+    img_height = 0
+    num_class = 0
+    num_channel = 0
+
+    if train_dataset == 'imagenet':
+        train_img_path = cfg_path.imagenet_t50k_img_raw_path
+        train_label_path = cfg_path.imagenet_t50k_label_path
+        test_img_path = cfg_path.imagenet_t1k_img_raw_path
+        test_label_path = cfg_path.imagenet_t1k_label_path
+
+        img_width = cfg_para.img_width_imagenet
+        img_height = cfg_para.img_height_imagenet
+        num_channel = cfg_para.num_channels_rgb
+        num_class = cfg_para.num_class_imagenet
+
+        train_label = load_imagenet_labels_onehot(train_label_path, num_class)
+        test_label = load_imagenet_labels_onehot(test_label_path, num_class)
+
+    elif train_dataset == 'cifar10':
+        img_width = cfg_para.img_width_cifar10
+        img_height = cfg_para.img_height_cifar10
+        num_channel = cfg_para.num_channels_rgb
+        num_class = cfg_para.num_class_cifar10
+
+        train_feature, train_label, test_feature, test_label = load_cifar10_keras()
+
+    elif train_dataset == 'mnist':
+        img_width = cfg_para.img_width_mnist
+        img_height = cfg_para.img_height_mnist
+        num_channel = cfg_para.num_channels_bw
+        num_class = cfg_para.num_class_mnist
+
+        train_img_path = cfg_path.mnist_train_img_path
+        train_label_path = cfg_path.mnist_train_label_path
+        test_img_path = cfg_path.mnist_test_10k_img_path
+        test_label_path = cfg_path.mnist_test_10k_label_path
+
+        train_feature = load_mnist_image(train_img_path)
+        train_label = load_mnist_image(test_img_path)
+        test_feature = load_mnist_image(test_img_path)
+        test_label = load_mnist_label_onehot(test_label_path)
+
+    else:
+        raise ValueError('Training Dataset is invaild, only support mnist, cifar10, imagenet')
+
     #########################
-    # Build
+    # Build packed model
     #########################
 
-    if sameInput:
-        features = tf.placeholder(tf.float32, [None, imgWidth, imgHeight, numChannels])
-        labels = tf.placeholder(tf.int64, [None, numClasses])
+    if is_same_input:
+        features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+        labels = tf.placeholder(tf.int64, [None, num_class])
 
     else:
         names = locals()
-        for midx in range(numTrainModel):
-            names['features' + str(midx)] = tf.placeholder(tf.float32, [None, imgWidth, imgHeight, numChannels])
-            names['labels' + str(midx)] = tf.placeholder(tf.int64, [None, numClasses])
+        for midx in range(num_train_model):
+            names['features' + str(midx)] = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+            names['labels' + str(midx)] = tf.placeholder(tf.int64, [None, num_class])
 
-    trainOpPack = buildModels()
+    pack_model = build_model_pack()
 
-    #########################
-    # Train
-    #########################
-
-    image_path_raw = cfg_yml.imagenet_t1k_img_path
-    image_path_bin = cfg_yml.imagenet_t1k_bin_path
-    label_path = cfg_yml.imagenet_t1k_label_path
-
-    if useRawImage:
-        Y_data = load_imagenet_labels_onehot(label_path, numClasses)
-
-        if measureStep:
-            if sameInput:
-                profileStepRawImageSameInput()
-            else:
-                profileStepRawImageDiffInput()
-        else:
-            if sameInput:
-                profileEpochRawImageSameInput()
-            else:
-                profileEpochRawImageDiffInput()
+    if is_same_input:
+        train_model_pack_same_input()
     else:
-        X_data = load_imagenet_bin(image_path_bin, numChannels, imgWidth, imgHeight)
-        Y_data = load_imagenet_labels_onehot(label_path, numClasses)
-
-        if measureStep:
-            if sameInput:
-                profileStepSameInput()
-            else:
-                profileStepDiffInput()
-        else:
-            if sameInput:
-                profileEpochSameInput()
-            else:
-                profileEpochDiffInput()
+        train_model_pack_diff_input()
