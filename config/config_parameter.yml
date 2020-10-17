@@ -59,7 +59,7 @@ hyperparams_hyperband:
   down_rate: 3
   pack_rate: 9
   train_dataset: cifar10
-  # policy: none, random, bs, knn
+  # policy: none, pack-random, pack-bs, pack-knn
   schedule_policy: none
   # parameters for generating workload
   workload_random_seed: 10000
