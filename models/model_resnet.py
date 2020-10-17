@@ -29,6 +29,11 @@ class resnet(object):
         self.weight_init = tf_contrib.layers.variance_scaling_initializer()
         self.weight_regularizer = tf_contrib.layers.l2_regularizer(0.0001)
 
+        self.cur_step = 1
+        self.cur_epoch = 1
+        self.desire_steps = -1
+        self.desire_epochs = -1
+
     def conv_layer(self, x_input, filters, kernel=4, stride=2, padding='SAME', use_bias=True, scope='conv_0'):
         with tf.variable_scope(scope):
             layer = tf.layers.conv2d(inputs=x_input, filters=filters, kernel_size=kernel,
@@ -231,6 +236,45 @@ class resnet(object):
 
     def set_batch_size(self, batch_size):
         return self.batch_size.assign(batch_size)
+
+    def get_current_step(self):
+        return self.cur_step
+
+    def set_current_step(self, cur_step=1):
+        self.cur_step += cur_step
+        if self.cur_step > self.desire_steps:
+            self.cur_step = 0
+            self.cur_epoch += 1
+
+    def reset_current_step(self):
+        self.cur_step = 0
+
+    def get_current_epoch(self):
+        return self.cur_epoch
+
+    def set_current_epoch(self, cur_epoch=1):
+        self.cur_epoch += cur_epoch
+
+    def reset_current_epoch(self):
+        self.cur_epoch = 0
+
+    def get_desire_steps(self):
+        return self.desire_steps
+
+    def set_desire_steps(self, desire_steps):
+        self.desire_steps = desire_steps
+
+    def get_desire_epochs(self):
+        return self.desire_epochs
+
+    def set_desire_epochs(self, desire_epochs):
+        self.desire_epochs = desire_epochs
+
+    def get_train_op(self):
+        return self.train_op
+
+    def get_model_instance_name(self):
+        self.net_name
 
     def get_layer_info(self):
         return self.num_conv_layer, self.num_pool_layer, self.num_residual_layer
