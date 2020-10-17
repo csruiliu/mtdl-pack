@@ -52,7 +52,8 @@ elif hyperband_train_dataset == 'mnist':
     test_label = load_mnist_label_onehot(test_label_path)
 
 
-def run_original(hyper_params, epochs, conn):
+#def hyperband_original(hyper_params, epochs, conn):
+def hyperband_original(hyper_params, epochs):
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
@@ -123,10 +124,10 @@ def run_original(hyper_params, epochs, conn):
             sess.run(model_entity.set_batch_size(test_label.shape[0]))
             acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
 
-        conn.send(acc_avg)
-        conn.close()
+        #conn.send(acc_avg)
+        #conn.close()
         print("Accuracy:", acc_avg)
-
+    return acc_avg
 '''
 def run_pack_bs(batch_size, confs, epochs, conn):
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])

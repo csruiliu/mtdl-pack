@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.abspath(".."))
 
 import config.config_parameter as cfg_para
-from hyperband_sched_engine import run_original
+from hyperband_sched_engine import hyperband_original
 
 
 class Hyperband:
@@ -104,13 +104,15 @@ class Hyperband:
                     self.counter += 1
 
                     # use process to run multiple models
-                    parent_conn, child_conn = Pipe()
-                    p = Process(target=self.hyperband_sched, args=(t, r_i, child_conn))
-                    p.start()
-                    acc = parent_conn.recv()
+                    #parent_conn, child_conn = Pipe()
+                    #p = Process(target=self.hyperband_sched, args=(t, r_i, child_conn))
+                    #p.start()
+                    #acc = parent_conn.recv()
+                    #result['acc'] = acc
+                    #parent_conn.close()
+                    #p.join()
+                    acc = hyperband_original(t, r_i)
                     result['acc'] = acc
-                    parent_conn.close()
-                    p.join()
 
                     list_acc.append(acc)
                     if self.best_acc < acc:
@@ -277,7 +279,7 @@ if __name__ == "__main__":
     start_time = timer()
     
     if sch_policy == 'none':
-        hb = Hyperband(resource_conf, down_rate, run_original)
+        hb = Hyperband(resource_conf, down_rate, hyperband_original)
         results = hb.run_original()
     '''
     elif sch_policy == 'random':

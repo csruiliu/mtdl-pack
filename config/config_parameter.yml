@@ -55,8 +55,8 @@ hyperparams_multiple_train:
   use_tb_timeline: False
 
 hyperparams_hyperband:
-  resource_conf: 81
-  down_rate: 3
+  resource_conf: 4
+  down_rate: 2
   pack_rate: 9
   train_dataset: cifar10
   # policy: none, pack-random, pack-bs, pack-knn
@@ -64,6 +64,21 @@ hyperparams_hyperband:
   # parameters for generating workload
   workload_random_seed: 10000
   model_type:
+    - resnet-34
+    - mobilenet-1
+  activation:
+    - relu
+  optimizer:
+    - Adam
+  batch_size:
+    - 20
+    - 40
+    - 60
+  learning_rate:
+    - 0.00001
+    - 0.0001
+    - 0.001
+  model_type_a:
     - densenet-121
     - densenet-169
     - densenet-201
@@ -75,17 +90,17 @@ hyperparams_hyperband:
     - resnet-152
     - mobilenet-1
     - mlp-1
-  activation:
+  activation_a:
     - sigmoid
     - leaky_relu
     - tanh
     - relu
-  optimizer:
+  optimizer_a:
     - Adam
     - SGD
     - Adagrad
     - Momentum
-  batch_size:
+  batch_size_a:
     - 20
     - 25
     - 30
@@ -97,7 +112,7 @@ hyperparams_hyperband:
     - 60
     - 65
     - 70
-  learning_rate:
+  learning_rate_a:
     - 0.000001
     - 0.00001
     - 0.0001
