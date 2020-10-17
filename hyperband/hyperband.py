@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.abspath(".."))
 
 import config.config_parameter as cfg_para
-from hyperband.hyperband_sched import run_original
+from hyperband.hyperband_sched_engine import run_original, run_pack_bs
 
 
 class Hyperband:
@@ -187,7 +187,7 @@ class Hyperband:
 
             for i in range(s + 1):
                 n_i = floor(n * self.eta ** (-i))
-                r_i = int(r * self.eta ** (i))
+                r_i = int(r * self.eta ** i)
                 print("\n*** {} bracket | {} configurations x {} iterations each ***".format(s, n_i, r_i))
                 val_acc = []
                 params_dict = dict()
@@ -279,6 +279,7 @@ if __name__ == "__main__":
     if sch_policy == 'none':
         hb = Hyperband(resource_conf, down_rate, run_original)
         results = hb.run_original()
+    '''
     elif sch_policy == 'random':
         hb = Hyperband(resource_conf, down_rate, run_pack_random)
         results = hb.run_pack_random(pack_rate_sch)
@@ -288,7 +289,7 @@ if __name__ == "__main__":
     elif sch_policy == 'pack-knn':
         hb = Hyperband(resource_conf, down_rate, run_pack_knn)
         results = hb.run_pack_knn(pack_rate_sch, knn_conf_euclid)
-        
+    '''
     end_time = timer()
 
     dur_time = end_time - start_time
