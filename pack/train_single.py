@@ -20,8 +20,8 @@ def build_model():
     model_entity = dm.get_model_entity()
     model_logit = model_entity.build(features, is_training=True)
     train_step = model_entity.train(model_logit, labels)
-
-    return train_step
+    eval_step = model_entity.evaluate(model_logit, labels)
+    return train_step, eval_step
 
 
 def train_model():
@@ -76,6 +76,10 @@ def train_model():
                     print("step time:", dur_time)
                     step_time += dur_time
                     step_count += 1
+
+        acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
+
+    print('evaluation accuracy:{}'.format(acc_avg))
 
     overall_time_end = timer()
 
@@ -163,6 +167,6 @@ if __name__ == '__main__':
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
-    train_op = build_model()
+    train_op, eval_op = build_model()
 
     train_model()
