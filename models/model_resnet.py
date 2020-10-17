@@ -11,7 +11,7 @@ class resnet(object):
         self.img_w = input_w
         self.channel_num = num_channel
         self.num_classes = num_classes
-        self.batch_size = batch_size
+        self.batch_size = tf.Variable(batch_size)
         self.opt = opt
         self.learning_rate = learning_rate
         self.activation = activation
@@ -228,6 +228,9 @@ class resnet(object):
             self.num_residual_layer += layer_num
         else:
             raise ValueError('[ResNet] cannot recognize the layer')
+
+    def set_batch_size(self, batch_size):
+        return self.batch_size.assign(batch_size)
 
     def get_layer_info(self):
         return self.num_conv_layer, self.num_pool_layer, self.num_residual_layer

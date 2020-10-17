@@ -11,7 +11,7 @@ class mlp(object):
         self.channel_num = num_channel
         self.input_size = input_h * input_w * num_channel
         self.num_classes = num_classes
-        self.batch_size = batch_size
+        self.batch_size = tf.Variable(batch_size)
         self.opt = opt
         self.learning_rate = learning_rate
         self.activation = activation
@@ -80,6 +80,9 @@ class mlp(object):
             self.eval_op = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
         return self.eval_op
+
+    def set_batch_size(self, batch_size):
+        return self.batch_size.assign(batch_size)
 
     def get_layer_info(self):
         return self.num_conv_layer, self.num_pool_layer, self.num_residual_layer

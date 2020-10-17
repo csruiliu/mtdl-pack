@@ -62,7 +62,7 @@ def run_original(hyper_params, epochs, conn):
 
     model_arch = hyper_params[0]
     model_type = model_arch.split('-')[0]
-    model_layer = model_arch.split('-')[1]
+    model_layer = int(model_arch.split('-')[1])
     batch_size = hyper_params[1]
     opt = hyper_params[2]
     learning_rate = hyper_params[3]
@@ -106,6 +106,8 @@ def run_original(hyper_params, epochs, conn):
 
         if hyperband_train_dataset == 'imagenet':
             acc_sum = 0
+            imagenet_batch_size_eval = 50
+            sess.run(model_entity.set_batch_size(imagenet_batch_size_eval))
             num_batch_test = test_label.shape[0] // 50
             test_image_list = sorted(os.listdir(test_img_path))
             for n in range(num_batch_test):
@@ -118,6 +120,7 @@ def run_original(hyper_params, epochs, conn):
                 acc_sum += acc_batch
             acc_avg = acc_sum / num_batch_test
         else:
+            sess.run(model_entity.set_batch_size(test_label.shape[0]))
             acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
 
         conn.send(acc_avg)
