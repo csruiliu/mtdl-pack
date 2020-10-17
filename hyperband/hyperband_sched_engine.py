@@ -140,11 +140,12 @@ def hyperband_pack_bs(batch_size, confs, epochs):
     acc_pack = list()
 
     for cidx, civ in enumerate(confs):
-        model_type = civ[0]
+        model_arch = civ[0]
+        model_type = model_arch.split('-')[0]
+        model_layer = int(model_arch.split('-')[1])
         opt = civ[2]
-        model_layer = civ[3]
-        learning_rate = civ[4]
-        activation = civ[5]
+        learning_rate = civ[3]
+        activation = civ[4]
 
         dm = ModelImporter(model_type, str(net_instnace), model_layer, img_height, img_width, num_channel, num_class,
                            batch_size, opt, learning_rate, activation, batch_padding=False)
@@ -222,13 +223,14 @@ def hyperband_pack_random(confs, epochs):
     batch_size_set = set()
 
     for cidx, cf in enumerate(confs):
-        model_type = cf[0]
+        model_arch = cf[0]
+        model_type = model_arch.split('-')[0]
+        model_layer = int(model_arch.split('-')[1])
         batch_size = cf[1]
         batch_size_set.add(batch_size)
         opt = cf[2]
-        model_layer = cf[3]
-        learning_rate = cf[4]
-        activation = cf[5]
+        learning_rate = cf[3]
+        activation = cf[4]
 
         desire_steps = train_label.shape[0] // batch_size
         dm = ModelImporter(model_type, str(net_instnace[cidx]), model_layer, img_height, img_width, num_channel,
@@ -332,13 +334,14 @@ def hyperband_pack_knn(confs, epochs):
     batch_size_set = set()
 
     for cidx, cf in enumerate(confs):
-        model_type = cf[0]
+        model_arch = cf[0]
+        model_type = model_arch.split('-')[0]
+        model_layer = int(model_arch.split('-')[1])
         batch_size = cf[1]
         batch_size_set.add(batch_size)
         opt = cf[2]
-        model_layer = cf[3]
-        learning_rate = cf[4]
-        activation = cf[5]
+        learning_rate = cf[3]
+        activation = cf[4]
 
         desire_steps = train_label.shape[0] // batch_size
 
