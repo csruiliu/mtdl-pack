@@ -54,30 +54,32 @@ elif hyperband_train_dataset == 'mnist':
 
 #def hyperband_original(hyper_params, epochs, conn):
 def hyperband_original(hyper_params, epochs):
-    features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
-    labels = tf.placeholder(tf.int64, [None, num_class])
+    graph = tf.Graph()
+    with graph.as_default():
+        features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+        labels = tf.placeholder(tf.int64, [None, num_class])
 
-    dt = datetime.now()
-    np.random.seed(dt.microsecond)
-    net_instnace = np.random.randint(sys.maxsize)
+        dt = datetime.now()
+        np.random.seed(dt.microsecond)
+        net_instnace = np.random.randint(sys.maxsize)
 
-    model_arch = hyper_params[0]
-    model_type = model_arch.split('-')[0]
-    model_layer = int(model_arch.split('-')[1])
-    batch_size = hyper_params[1]
-    opt = hyper_params[2]
-    learning_rate = hyper_params[3]
-    activation = hyper_params[4]
+        model_arch = hyper_params[0]
+        model_type = model_arch.split('-')[0]
+        model_layer = int(model_arch.split('-')[1])
+        batch_size = hyper_params[1]
+        opt = hyper_params[2]
+        learning_rate = hyper_params[3]
+        activation = hyper_params[4]
 
-    print("\n** model: {} | batch size: {} | opt: {} | model layer: {} | learn rate: {} | act: {} **".format(
-          model_type, batch_size, opt, model_layer, learning_rate, activation))
+        print("\n** model: {} | batch size: {} | opt: {} | model layer: {} | learn rate: {} | act: {} **".format(
+            model_type, batch_size, opt, model_layer, learning_rate, activation))
 
-    dm = ModelImporter(model_type, str(net_instnace), model_layer, img_height, img_width, num_channel, num_class,
-                       batch_size, opt, learning_rate, activation, batch_padding=True)
-    model_entity = dm.get_model_entity()
-    model_logit = model_entity.build(features, is_training=True)
-    train_op = model_entity.train(model_logit, labels)
-    eval_op = model_entity.evaluate(model_logit, labels)
+        dm = ModelImporter(model_type, str(net_instnace), model_layer, img_height, img_width, num_channel, num_class,
+                           batch_size, opt, learning_rate, activation, batch_padding=False)
+        model_entity = dm.get_model_entity()
+        model_logit = model_entity.build(features, is_training=True)
+        train_op = model_entity.train(model_logit, labels)
+        eval_op = model_entity.evaluate(model_logit, labels)
 
     if hyperband_train_dataset == 'imagenet':
         image_list = sorted(os.listdir(train_img_path))
@@ -108,20 +110,18 @@ def hyperband_original(hyper_params, epochs):
         if hyperband_train_dataset == 'imagenet':
             acc_sum = 0
             imagenet_batch_size_eval = 50
-            sess.run(model_entity.set_batch_size(imagenet_batch_size_eval))
-            num_batch_test = test_label.shape[0] // 50
+            num_batch_eval = test_label.shape[0] // imagenet_batch_size_eval
             test_image_list = sorted(os.listdir(test_img_path))
-            for n in range(num_batch_test):
-                batch_offset = n * 50
-                batch_end = (n + 1) * 50
+            for n in range(num_batch_eval):
+                batch_offset = n * imagenet_batch_size_eval
+                batch_end = (n + 1) * imagenet_batch_size_eval
                 test_batch_list = test_image_list[batch_offset:batch_end]
                 test_feature_batch = load_imagenet_raw(test_img_path, test_batch_list, img_height, img_width)
                 test_label_batch = test_label[batch_offset:batch_end]
                 acc_batch = sess.run(eval_op, feed_dict={features: test_feature_batch, labels: test_label_batch})
                 acc_sum += acc_batch
-            acc_avg = acc_sum / num_batch_test
+            acc_avg = acc_sum / num_batch_eval
         else:
-            sess.run(model_entity.set_batch_size(test_label.shape[0]))
             acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
 
         #conn.send(acc_avg)
