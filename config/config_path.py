@@ -7,8 +7,8 @@ with open(current_folder+'/config_path.yml', 'r') as ymlfile:
     cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
 #path_cfg = cfg['local_path']
-#path_cfg = cfg['roscoe_path']
-path_cfg = cfg['hp_path']
+path_cfg = cfg['roscoe_path']
+#path_cfg = cfg['hp_path']
 
 imagenet_t50k_img_raw_path = path_cfg['dataset_imagenet_t50k_img_raw']
 imagenet_t50k_label_path = path_cfg['dataset_imagenet_t50k_label']

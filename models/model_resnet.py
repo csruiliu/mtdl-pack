@@ -125,7 +125,7 @@ class resnet(object):
 
     def build(self, input_features, is_training):
         if self.batch_padding:
-            train_input = input_features[0:self.batch_size, :, :, :]
+            train_input = input_features[0:self.batch_size]
         else:
             train_input = input_features
 
@@ -179,7 +179,7 @@ class resnet(object):
 
     def train(self, logits, train_labels):
         if self.batch_padding:
-            batch_labels = train_labels[0:self.batch_size, :]
+            batch_labels = train_labels[0:self.batch_size]
         else:
             batch_labels = train_labels
 

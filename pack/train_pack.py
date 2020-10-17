@@ -19,7 +19,7 @@ def build_model_pack():
     for midx, mt in enumerate(train_model_type_list):
         dm = ModelImporter(mt, str(model_name_abbr.pop()), train_layer_num_list[midx], img_height, img_width,
                            num_channel, num_class, train_batch_size_list[midx], train_optimizer_list[midx],
-                           train_learn_rate_list[midx], train_activation_list[midx], batch_padding=True)
+                           train_learn_rate_list[midx], train_activation_list[midx], batch_padding=is_batch_padding)
 
         model_entity = dm.get_model_entity()
 
