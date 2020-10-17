@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.abspath(".."))
 
 import config.config_parameter as cfg_para
-from hyperband.hyperband_sched_engine import run_original, run_pack_bs
+from hyperband_sched_engine import run_original
 
 
 class Hyperband:
@@ -30,7 +30,7 @@ class Hyperband:
         self.best_counter = -1
         self.hyperband_sched = hyperband_sched
 
-        self.hp_model_type = cfg_para.hyperband_model_type_list
+        self.hp_model_arch = cfg_para.hyperband_model_type_list
         self.hp_batch_size = cfg_para.hyperband_batch_size_list
         self.hp_opt = cfg_para.hyperband_optimizer_list
         self.hp_learn_rate = cfg_para.hyperband_learn_rate_list
@@ -38,7 +38,7 @@ class Hyperband:
         self.hp_random_seed = cfg_para.hyperband_random_seed
 
     def generate_hyperband_workload(self, sample_size):
-        all_conf = [self.hp_model_type, self.hp_batch_size, self.hp_opt, self.hp_learn_rate, self.hp_activation]
+        all_conf = [self.hp_model_arch, self.hp_batch_size, self.hp_opt, self.hp_learn_rate, self.hp_activation]
         hyperband_workload = list(itertools.product(*all_conf))
         np.random.seed(self.hp_random_seed)
         idx_list = np.random.choice(np.arange(0, len(hyperband_workload)), sample_size, replace=False)

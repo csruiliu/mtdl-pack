@@ -60,12 +60,13 @@ def run_original(hyper_params, epochs, conn):
     np.random.seed(dt.microsecond)
     net_instnace = np.random.randint(sys.maxsize)
 
-    model_type = hyper_params[0]
+    model_arch = hyper_params[0]
+    model_type = model_arch.split('-')[0]
+    model_layer = model_arch.split('-')[1]
     batch_size = hyper_params[1]
     opt = hyper_params[2]
-    model_layer = hyper_params[3]
-    learning_rate = hyper_params[4]
-    activation = hyper_params[5]
+    learning_rate = hyper_params[3]
+    activation = hyper_params[4]
 
     print("\n** model: {} | batch size: {} | opt: {} | model layer: {} | learn rate: {} | act: {} **".format(
           model_type, batch_size, opt, model_layer, learning_rate, activation))
