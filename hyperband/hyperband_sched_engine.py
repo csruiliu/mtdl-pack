@@ -88,7 +88,7 @@ def hyperband_original(hyper_params, epochs):
     config.gpu_options.allow_growth = True
     config.allow_soft_placement = True
 
-    with tf.Session(config=config) as sess:
+    with tf.Session(graph=graph, config=config) as sess:
         sess.run(tf.global_variables_initializer())
         num_batch = train_label.shape[0] // batch_size
         for e in range(epochs):
