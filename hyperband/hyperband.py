@@ -2,18 +2,18 @@ from timeit import default_timer as timer
 import numpy as np
 import itertools
 from operator import itemgetter
-from multiprocessing import Process, Pipe
 from math import log, ceil, floor
 import os
 import sys
 sys.path.append(os.path.abspath(".."))
 
 import config.config_parameter as cfg_para
-from hyperband_sched_engine import hyperband_original
+from hyperband_sched_engine import hyperband_original, hyperband_pack_bs, hyperband_pack_random, hyperband_pack_knn
+from knn_engine import knn_conf_bs, knn_conf_euclid
 
 
 class Hyperband:
-    def __init__(self, resource_conf, down_rate, hyperband_sched):
+    def __init__(self, resource_conf, down_rate):
         # maximun budget for single configuration, i.e., maximum iterations per configuration in example
         self.R = resource_conf
         # defines configuration downsampling rate (default = 3)
@@ -28,7 +28,6 @@ class Hyperband:
         self.counter = 0
         self.best_acc = np.NINF
         self.best_counter = -1
-        self.hyperband_sched = hyperband_sched
 
         self.hp_model_arch = cfg_para.hyperband_model_type_list
         self.hp_batch_size = cfg_para.hyperband_batch_size_list
@@ -102,15 +101,6 @@ class Hyperband:
                 for t in T:
                     result = {'acc': -1, 'counter': -1}
                     self.counter += 1
-
-                    # use process to run multiple models
-                    #parent_conn, child_conn = Pipe()
-                    #p = Process(target=self.hyperband_sched, args=(t, r_i, child_conn))
-                    #p.start()
-                    #acc = parent_conn.recv()
-                    #result['acc'] = acc
-                    #parent_conn.close()
-                    #p.join()
                     acc = hyperband_original(t, r_i)
                     result['acc'] = acc
 
@@ -128,54 +118,6 @@ class Hyperband:
                     self.results.append(result)
 
                 indices = np.argsort(list_acc)
-                T = [T[i] for i in indices]
-                T = T[0:floor(n_i / self.eta)]
-
-        return self.results
-
-    def run_pack_random(self, random_size):
-        for s in reversed(range(self.s_max + 1)):
-            n = ceil(self.B / self.R / (s + 1) * (self.eta ** s))
-            r = self.R * (self.eta ** (-s))
-            T = self.generate_hyperband_workload(n)
-
-            for i in range(s + 1):
-                n_i = floor(n * self.eta ** (-i))
-                r_i = int(r * self.eta ** i)
-                print("\n*** {} bracket | {} configurations x {} iterations each ***".format(s, n_i, r_i))
-                val_acc = []
-                params_list = []
-                num_para_list = ceil(len(T) / random_size)
-                if num_para_list == 1:
-                    params_list.append(T)
-                else:
-                    for npl in range(num_para_list - 1):
-                        params_list.append(T[npl * random_size:(npl + 1) * random_size])
-                    params_list.append(T[(num_para_list - 1) * random_size:])
-
-                for pidx in range(num_para_list):
-                    parent_conn, child_conn = Pipe()
-                    selected_confs = params_list[pidx]
-                    p = Process(target=self.hyperband_sched, args=(selected_confs, r_i, child_conn))
-                    p.start()
-                    acc_pack = parent_conn.recv()
-                    parent_conn.close()
-                    p.join()
-
-                    for idx, acc in enumerate(acc_pack):
-                        result = {'acc': -1}
-                        val_acc.append(acc)
-                        result['acc'] = acc
-                        result['params'] = []
-                        for params in selected_confs[idx]:
-                            result['params'].append(params)
-
-                        if self.best_acc < acc:
-                            self.best_acc = acc
-                            print("best accuracy so far: {:.5f} \n".format(self.best_acc))
-                        self.results.append(result)
-
-                indices = np.argsort(val_acc)
                 T = [T[i] for i in indices]
                 T = T[0:floor(n_i / self.eta)]
 
@@ -202,18 +144,54 @@ class Hyperband:
                         params_dict[t[1]].append(t)
 
                 for bs, conf in params_dict.items():
-                    parent_conn, child_conn = Pipe()
-                    p = Process(target=self.hyperband_sched, args=(bs, conf, r_i, child_conn))
-                    p.start()
-                    acc_pack = parent_conn.recv()
-                    parent_conn.close()
-                    p.join()
-
+                    acc_pack = hyperband_pack_bs(bs, conf, r_i)
                     for aidx, acc in enumerate(acc_pack):
                         result = {'acc': -1}
                         val_acc.append(acc)
                         result['acc'] = acc
                         result['params'] = conf[aidx]
+
+                        if self.best_acc < acc:
+                            self.best_acc = acc
+                            print("best accuracy so far: {:.5f} \n".format(self.best_acc))
+                        self.results.append(result)
+
+                indices = np.argsort(val_acc)
+                T = [T[i] for i in indices]
+                T = T[0:floor(n_i / self.eta)]
+
+        return self.results
+
+    def run_pack_random(self, random_size):
+        for s in reversed(range(self.s_max + 1)):
+            n = ceil(self.B / self.R / (s + 1) * (self.eta ** s))
+            r = self.R * (self.eta ** (-s))
+            T = self.generate_hyperband_workload(n)
+
+            for i in range(s + 1):
+                n_i = floor(n * self.eta ** (-i))
+                r_i = int(r * self.eta ** i)
+                print("\n*** {} bracket | {} configurations x {} iterations each ***".format(s, n_i, r_i))
+                val_acc = []
+                params_list = []
+                num_para_list = ceil(len(T) / random_size)
+                if num_para_list == 1:
+                    params_list.append(T)
+                else:
+                    for npl in range(num_para_list - 1):
+                        params_list.append(T[npl * random_size:(npl + 1) * random_size])
+                    params_list.append(T[(num_para_list - 1) * random_size:])
+
+                for pidx in range(num_para_list):
+                    selected_confs = params_list[pidx]
+                    acc_pack = hyperband_pack_random(selected_confs, r_i)
+                    for idx, acc in enumerate(acc_pack):
+                        result = {'acc': -1}
+                        val_acc.append(acc)
+                        result['acc'] = acc
+                        result['params'] = []
+                        for params in selected_confs[idx]:
+                            result['params'].append(params)
 
                         if self.best_acc < acc:
                             self.best_acc = acc
@@ -241,12 +219,7 @@ class Hyperband:
                 trial_pack_collection = knn_method(T, topk)
 
                 for tpidx in trial_pack_collection:
-                    parent_conn, child_conn = Pipe()
-                    p = Process(target=self.hyperband_sched, args=(tpidx, r_i, child_conn))
-                    p.start()
-                    acc_pack = parent_conn.recv()
-                    parent_conn.close()
-                    p.join()
+                    acc_pack = hyperband_pack_knn(tpidx, r_i)
 
                     for idx, acc in enumerate(acc_pack):
                         result = {'acc': -1}
@@ -272,30 +245,29 @@ if __name__ == "__main__":
     resource_conf = cfg_para.hyperband_resource_conf
     down_rate = cfg_para.hyperband_down_rate
     sch_policy = cfg_para.hyperband_schedule_policy
-    sch_policy_pack_rate = cfg_para.hyperband_pack_rate
+    hyperband_pack_rate = cfg_para.hyperband_pack_rate
 
     results = None
 
     start_time = timer()
     
     if sch_policy == 'none':
-        hb = Hyperband(resource_conf, down_rate, hyperband_original)
+        hb = Hyperband(resource_conf, down_rate)
         results = hb.run_original()
-    '''
-    elif sch_policy == 'random':
-        hb = Hyperband(resource_conf, down_rate, run_pack_random)
-        results = hb.run_pack_random(pack_rate_sch)
     elif sch_policy == 'pack-bs':
-        hb = Hyperband(resource_conf, down_rate, run_pack_bs)
+        hb = Hyperband(resource_conf, down_rate)
         results = hb.run_pack_bs()
+    elif sch_policy == 'pack-random':
+        hb = Hyperband(resource_conf, down_rate)
+        results = hb.run_pack_random(hyperband_pack_rate)
     elif sch_policy == 'pack-knn':
-        hb = Hyperband(resource_conf, down_rate, run_pack_knn)
-        results = hb.run_pack_knn(pack_rate_sch, knn_conf_euclid)
-    '''
+        hb = Hyperband(resource_conf, down_rate)
+        results = hb.run_pack_knn(hyperband_pack_rate, knn_conf_euclid)
+
     end_time = timer()
 
     dur_time = end_time - start_time
     print("{} total, best:\n".format(len(results)))
     best_hp = sorted(results, key = lambda x: x['acc'])[-1]
     print(best_hp)
-    print('total exp time:',dur_time)
+    print('total exp time: {}'.format(dur_time))

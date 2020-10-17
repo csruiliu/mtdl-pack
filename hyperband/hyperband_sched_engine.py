@@ -52,7 +52,6 @@ elif hyperband_train_dataset == 'mnist':
     test_label = load_mnist_label_onehot(test_label_path)
 
 
-#def hyperband_original(hyper_params, epochs, conn):
 def hyperband_original(hyper_params, epochs):
     graph = tf.Graph()
     with graph.as_default():
@@ -124,12 +123,11 @@ def hyperband_original(hyper_params, epochs):
         else:
             acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
 
-        #conn.send(acc_avg)
-        #conn.close()
-        print("Accuracy:", acc_avg)
+    print("Accuracy:", acc_avg)
     return acc_avg
-'''
-def run_pack_bs(batch_size, confs, epochs, conn):
+
+
+def hyperband_pack_bs(batch_size, confs, epochs):
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
@@ -137,10 +135,9 @@ def run_pack_bs(batch_size, confs, epochs, conn):
     np.random.seed(dt.microsecond)
     net_instnace = np.random.randint(sys.maxsize, size=len(confs))
 
-    setbs_pack = []
-    train_pack = []
-    eval_pack = []
-    acc_pack = []
+    train_pack = list()
+    eval_pack = list()
+    acc_pack = list()
 
     for cidx, civ in enumerate(confs):
         model_type = civ[0]
@@ -150,14 +147,16 @@ def run_pack_bs(batch_size, confs, epochs, conn):
         activation = civ[5]
 
         dm = ModelImporter(model_type, str(net_instnace), model_layer, img_height, img_width, num_channel, num_class,
-                           batch_size, opt, learning_rate, activation, batch_padding=True)
+                           batch_size, opt, learning_rate, activation, batch_padding=False)
         model_entity = dm.get_model_entity()
         model_logit = model_entity.build(features, is_training=True)
         train_op = model_entity.train(model_logit, labels)
         eval_op = model_entity.evaluate(model_logit, labels)
-        setbs_pack.append(model_entity.setBatchSize(Y_data_eval.shape[0]))
         train_pack.append(train_op)
         eval_pack.append(eval_op)
+
+    if hyperband_train_dataset == 'imagenet':
+        image_list = sorted(os.listdir(train_img_path))
 
     config = tf.ConfigProto()
     config.allow_soft_placement = True
@@ -170,21 +169,43 @@ def run_pack_bs(batch_size, confs, epochs, conn):
                 # print('epoch %d / %d, step %d / %d' %(e+1, epochs, i+1, num_batch))
                 batch_offset = i * batch_size
                 batch_end = (i + 1) * batch_size
-                train_feature_batch = X_data[batch_offset:batch_end, :, :, :]
-                train_label_batch = Y_data[batch_offset:batch_end, :]
-                sess.run(train_pack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
 
-        sess.run(setbs_pack)
-        for evalOps in eval_pack:
-            acc_arg = evalOps.eval({features: X_data_eval, labels: Y_data_eval})
-            acc_pack.append(acc_arg)
+                if hyperband_train_dataset == 'imagenet':
+                    batch_list = image_list[batch_offset:batch_end]
+                    train_feature_batch = load_imagenet_raw(train_img_path, batch_list, img_height, img_width)
+                else:
+                    train_feature_batch = train_feature[batch_offset:batch_end]
 
-        conn.send(acc_pack)
-        conn.close()
-        print("Accuracy:", acc_pack)
+                train_label_batch = train_label[batch_offset:batch_end]
+
+                sess.run(train_pack, feed_dict={features: train_feature_batch, labels: train_label_batch})
+
+        if hyperband_train_dataset == 'imagenet':
+            acc_sum = 0
+            imagenet_batch_size_eval = 50
+            num_batch_eval = test_label.shape[0] // imagenet_batch_size_eval
+            test_image_list = sorted(os.listdir(test_img_path))
+            for eval_op in eval_pack:
+                for n in range(num_batch_eval):
+                    batch_offset = n * imagenet_batch_size_eval
+                    batch_end = (n + 1) * imagenet_batch_size_eval
+                    test_batch_list = test_image_list[batch_offset:batch_end]
+                    test_feature_batch = load_imagenet_raw(test_img_path, test_batch_list, img_height, img_width)
+                    test_label_batch = test_label[batch_offset:batch_end]
+                    acc_batch = sess.run(eval_op, feed_dict={features: test_feature_batch, labels: test_label_batch})
+                    acc_sum += acc_batch
+                acc_avg = acc_sum / num_batch_eval
+                acc_pack.append(acc_avg)
+        else:
+            for eval_op in eval_pack:
+                acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
+                acc_pack.append(acc_avg)
+
+    print("Accuracy:", acc_pack)
+    return acc_pack
 
 
-def run_params_pack_random(confs, epochs, conn):
+def hyperband_pack_random(confs, epochs):
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
@@ -194,10 +215,10 @@ def run_params_pack_random(confs, epochs, conn):
 
     desire_epochs = epochs
 
-    entity_pack = []
-    train_pack = []
-    eval_pack = []
-    acc_pack = []
+    entity_pack = list()
+    train_pack = list()
+    eval_pack = list()
+    acc_pack = list()
     batch_size_set = set()
 
     for cidx, cf in enumerate(confs):
@@ -213,14 +234,18 @@ def run_params_pack_random(confs, epochs, conn):
         dm = ModelImporter(model_type, str(net_instnace[cidx]), model_layer, img_height, img_width, num_channel,
                            num_class, batch_size, opt, learning_rate, activation, batch_padding=True)
         model_entity = dm.get_model_entity()
-        model_entity.setDesireEpochs(desire_epochs)
-        modelEntity.setDesireSteps(desire_steps)
-        modelLogit = modelEntity.build(features)
-        trainOps = modelEntity.train(modelLogit, labels)
-        evalOps = modelEntity.evaluate(modelLogit, labels)
-        entity_pack.append(modelEntity)
-        train_pack.append(trainOps)
-        eval_pack.append(evalOps)
+
+        model_entity.set_desire_epochs(desire_epochs)
+        model_entity.set_desire_steps(desire_steps)
+        model_logit = model_entity.build(features, is_training=True)
+        train_op = model_entity.train(model_logit, labels)
+        eval_op = model_entity.evaluate(model_logit, labels)
+        entity_pack.append(model_entity)
+        train_pack.append(train_op)
+        eval_pack.append(eval_op)
+
+    if hyperband_train_dataset == 'imagenet':
+        image_list = sorted(os.listdir(train_img_path))
 
     config = tf.ConfigProto()
     config.allow_soft_placement = True
@@ -232,20 +257,27 @@ def run_params_pack_random(confs, epochs, conn):
         complete_flag = False
 
         while len(train_pack) != 0:
-            num_steps = Y_data.shape[0] // max_bs
+            num_steps = train_label.shape[0] // max_bs
             for i in range(num_steps):
                 print('step %d / %d' % (i + 1, num_steps))
                 batch_offset = i * max_bs
                 batch_end = (i + 1) * max_bs
-                X_mini_batch_feed = X_data[batch_offset:batch_end, :, :, :]
-                Y_mini_batch_feed = Y_data[batch_offset:batch_end, :]
-                sess.run(train_pack, feed_dict={features: X_mini_batch_feed, labels: Y_mini_batch_feed})
+
+                if hyperband_train_dataset == 'imagenet':
+                    batch_list = image_list[batch_offset:batch_end]
+                    train_feature_batch = load_imagenet_raw(train_img_path, batch_list, img_height, img_width)
+                else:
+                    train_feature_batch = train_feature[batch_offset:batch_end]
+                train_label_batch = train_label[batch_offset:batch_end]
+
+                sess.run(train_pack, feed_dict={features: train_feature_batch, labels: train_label_batch})
+
                 for me in entity_pack:
-                    me.setCurStep()
+                    me.set_current_step()
                     if me.isCompleteTrain():
-                        print("model has been trained completely:", me.getModelInstance())
-                        sess.run(me.setBatchSize(Y_data_eval.shape[0]))
-                        train_pack.remove(me.getTrainOp())
+                        print("model has been trained completely:", me.get_model_instance_name())
+                        sess.run(me.set_batch_size(test_label.shape[0]))
+                        train_pack.remove(me.get_train_op())
                         complete_flag = True
 
                 if len(train_pack) == 0:
@@ -257,40 +289,35 @@ def run_params_pack_random(confs, epochs, conn):
                     complete_flag = False
                     break
 
-        print("models have been training this run, start to evaluate")
-        for ep in eval_pack:
-            # num_steps = Y_data.shape[0] // max_bs
-            acc_arg = ep.eval({features: X_data_eval, labels: Y_data_eval})
-            # acc_arg = sess.run(ep, feed_dict = {features: X_mini_batch_feed, labels: Y_mini_batch_feed})
-            acc_pack.append(acc_arg)
-            # print(acc_arg)
+        print("Start to evaluate")
+        if hyperband_train_dataset == 'imagenet':
+            acc_sum = 0
+            imagenet_batch_size_eval = 50
+            num_batch_eval = test_label.shape[0] // imagenet_batch_size_eval
+            test_image_list = sorted(os.listdir(test_img_path))
+            for eval_op in eval_pack:
+                for n in range(num_batch_eval):
+                    batch_offset = n * imagenet_batch_size_eval
+                    batch_end = (n + 1) * imagenet_batch_size_eval
+                    test_batch_list = test_image_list[batch_offset:batch_end]
+                    test_feature_batch = load_imagenet_raw(test_img_path, test_batch_list, img_height, img_width)
+                    test_label_batch = test_label[batch_offset:batch_end]
+                    acc_batch = sess.run(eval_op, feed_dict={features: test_feature_batch, labels: test_label_batch})
+                    acc_sum += acc_batch
+                acc_avg = acc_sum / num_batch_eval
+                acc_pack.append(acc_avg)
+        else:
+            for eval_op in eval_pack:
+                acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
+                acc_pack.append(acc_avg)
 
-    conn.send(acc_pack)
-    conn.close()
     print("Accuracy:", acc_pack)
-
-from matplotlib import pyplot as plt
-from multiprocessing import Process, Pipe
-
-from img_utils import * 
+    return acc_pack
 
 
-def run_params_pack_knn(confs, epochs, conn):
-    seed = np.random.randint(rand_seed)
-    features = tf.placeholder(tf.float32, [None, imgWidth, imgHeight, numChannels])
-    labels = tf.placeholder(tf.int64, [None, numClasses])
-
-    #X_data = load_mnist_image(mnist_train_img_path, seed)
-    #Y_data = load_mnist_label_onehot(mnist_train_label_path, seed)
-    #X_data_eval = load_mnist_image(mnist_t10k_img_path, seed)
-    #Y_data_eval = load_mnist_label_onehot(mnist_t10k_label_path, seed)
-    X_data, Y_data = load_cifar_train(cifar_10_path, seed)
-    X_data_eval, Y_data_eval = load_cifar_test(cifar_10_path, seed)
-    #X_data = load_imagenet_bin_pickle(imagenet_t10k_bin_path, numChannels, imgWidth, imgHeight)
-    #Y_data = load_imagenet_labels_onehot(imagenet_t10k_label_path, numClasses)
-    #X_data_eval = load_imagenet_bin_pickle(imagenet_t1k_bin_path, numChannels, imgWidth, imgHeight)
-    #Y_data_eval = load_imagenet_labels_onehot(imagenet_t1k_label_path, numClasses)
-
+def hyperband_pack_knn(confs, epochs):
+    features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+    labels = tf.placeholder(tf.int64, [None, num_class])
 
     dt = datetime.now()
     np.random.seed(dt.microsecond)    
@@ -298,13 +325,11 @@ def run_params_pack_knn(confs, epochs, conn):
     
     desire_epochs = epochs
 
-    entity_pack = []
-    train_pack = []
-    eval_pack = [] 
-    acc_pack = []
+    entity_pack = list()
+    train_pack = list()
+    eval_pack = list()
+    acc_pack = list()
     batch_size_set = set()
-
-    max_bs = np.NINF
 
     for cidx, cf in enumerate(confs):
         model_type = cf[0]
@@ -315,17 +340,23 @@ def run_params_pack_knn(confs, epochs, conn):
         learning_rate = cf[4]
         activation = cf[5]
 
-        desire_steps = Y_data.shape[0] // batch_size
-        dm = DnnModel(model_type, str(net_instnace[cidx]), model_layer, imgWidth, imgHeight, numChannels, numClasses, batch_size, opt, learning_rate, activation)
-        modelEntity = dm.getModelEntity()
-        modelEntity.setDesireEpochs(desire_epochs)
-        modelEntity.setDesireSteps(desire_steps)
-        modelLogit = modelEntity.build(features)
-        trainOps = modelEntity.train(modelLogit, labels)
-        evalOps = modelEntity.evaluate(modelLogit, labels)
-        entity_pack.append(modelEntity)
-        train_pack.append(trainOps)
-        eval_pack.append(evalOps)
+        desire_steps = train_label.shape[0] // batch_size
+
+        dm = ModelImporter(model_type, str(net_instnace[cidx]), model_layer, img_height, img_width, num_channel,
+                           num_class, batch_size, opt, learning_rate, activation, batch_padding=True)
+
+        model_entity = dm.get_model_entity()
+        model_entity.set_desire_epochs(desire_epochs)
+        model_entity.set_desire_steps(desire_steps)
+        model_logit = model_entity.build(features, is_training=True)
+        train_op = model_entity.train(model_logit, labels)
+        eval_op = model_entity.evaluate(model_logit, labels)
+        entity_pack.append(model_entity)
+        train_pack.append(train_op)
+        eval_pack.append(eval_op)
+
+    if hyperband_train_dataset == 'imagenet':
+        image_list = sorted(os.listdir(train_img_path))
 
     config = tf.ConfigProto()
     config.allow_soft_placement = True   
@@ -338,20 +369,26 @@ def run_params_pack_knn(confs, epochs, conn):
         complete_flag = False
 
         while len(train_pack) != 0:
-            num_steps = Y_data.shape[0] // max_bs
+            num_steps = train_label.shape[0] // max_bs
             for i in range(num_steps):
                 print('step %d / %d' %(i+1, num_steps))
                 batch_offset = i * max_bs
                 batch_end = (i+1) * max_bs
-                X_mini_batch_feed = X_data[batch_offset:batch_end,:,:,:]
-                Y_mini_batch_feed = Y_data[batch_offset:batch_end,:]
-                sess.run(train_pack, feed_dict = {features: X_mini_batch_feed, labels: Y_mini_batch_feed})
+
+                if hyperband_train_dataset == 'imagenet':
+                    batch_list = image_list[batch_offset:batch_end]
+                    train_feature_batch = load_imagenet_raw(train_img_path, batch_list, img_height, img_width)
+                else:
+                    train_feature_batch = train_feature[batch_offset:batch_end]
+                train_label_batch = train_label[batch_offset:batch_end]
+
+                sess.run(train_pack, feed_dict={features: train_feature_batch, labels: train_label_batch})
                 for me in entity_pack:
                     me.setCurStep()
                     if me.isCompleteTrain():
-                        print("model has been trained completely:",me.getModelInstance())
-                        sess.run(me.setBatchSize(Y_data_eval.shape[0]))
-                        train_pack.remove(me.getTrainOp())
+                        print("model has been trained completely:{}".format(me.get_model_instance()))
+                        sess.run(me.setBatchSize(test_label.shape[0]))
+                        train_pack.remove(me.get_train_op())
                         complete_flag = True   
                 
                 if len(train_pack) == 0:
@@ -362,17 +399,28 @@ def run_params_pack_knn(confs, epochs, conn):
                     max_bs = max(batch_size_set)
                     complete_flag = False
                     break
-    
-        #print("models have been training this run, start to evaluate")
-        for ep in eval_pack:
-            #num_steps = Y_data.shape[0] // max_bs
-            acc_arg = ep.eval({features: X_data_eval, labels: Y_data_eval})
-            #acc_arg = sess.run(ep, feed_dict = {features: X_mini_batch_feed, labels: Y_mini_batch_feed})
-            acc_pack.append(acc_arg)
-            #print(acc_arg)
-        
-    conn.send(acc_pack)
-    conn.close()
-    print("Accuracy:", acc_pack)
 
-'''
+        print("Start to evaluate")
+        if hyperband_train_dataset == 'imagenet':
+            acc_sum = 0
+            imagenet_batch_size_eval = 50
+            num_batch_eval = test_label.shape[0] // imagenet_batch_size_eval
+            test_image_list = sorted(os.listdir(test_img_path))
+            for eval_op in eval_pack:
+                for n in range(num_batch_eval):
+                    batch_offset = n * imagenet_batch_size_eval
+                    batch_end = (n + 1) * imagenet_batch_size_eval
+                    test_batch_list = test_image_list[batch_offset:batch_end]
+                    test_feature_batch = load_imagenet_raw(test_img_path, test_batch_list, img_height, img_width)
+                    test_label_batch = test_label[batch_offset:batch_end]
+                    acc_batch = sess.run(eval_op, feed_dict={features: test_feature_batch, labels: test_label_batch})
+                    acc_sum += acc_batch
+                acc_avg = acc_sum / num_batch_eval
+                acc_pack.append(acc_avg)
+        else:
+            for eval_op in eval_pack:
+                acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
+                acc_pack.append(acc_avg)
+
+    print("Accuracy:", acc_pack)
+    return acc_pack
