@@ -20,6 +20,7 @@ opt_global = cfg_para.hyperband_optimizer_list
 learning_rate_global = cfg_para.hyperband_learn_rate_list
 activation_global = cfg_para.hyperband_activation_list
 
+
 def sort_list(list1, list2):
     zipped_pairs = zip(list2, list1)
     z = [x for _, x in sorted(zipped_pairs)]
@@ -34,8 +35,8 @@ def compute_euclid(conf_a, conf_b):
             if '-' in cfv:
                 if conf_a[cfi].split('-')[0] == conf_b[cfi].split('-')[0]:
                     conf_list = list(globals()['model_layer_global'])
-                    conf_a_conf_idx = conf_list.index(cfv)
-                    conf_b_conf_idx = conf_list.index(conf_b[cfi])
+                    conf_a_conf_idx = conf_list.index(int(cfv.split('-')[1]))
+                    conf_b_conf_idx = conf_list.index(int(conf_b[cfi].split('-')[1]))
                     pair_euclid_distance += abs(conf_a_conf_idx - conf_b_conf_idx)
             elif conf_a[cfi] != conf_b[cfi]:
                 pair_euclid_distance += 1

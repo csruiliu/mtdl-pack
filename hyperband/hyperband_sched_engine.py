@@ -390,7 +390,7 @@ def hyperband_pack_knn(confs, epochs):
                 for me in entity_pack:
                     me.set_current_step()
                     if me.is_complete_train():
-                        print("model has been trained completely:{}".format(me.get_model_instance()))
+                        print("model has been trained completely:{}".format(me.get_model_instance_name()))
                         sess.run(me.set_batch_size(test_label.shape[0]))
                         train_pack.remove(me.get_train_op())
                         complete_flag = True   

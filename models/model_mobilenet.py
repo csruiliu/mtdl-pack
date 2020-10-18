@@ -6,6 +6,7 @@ class mobilenet(object):
     def __init__(self, net_name, num_layer, input_h, input_w, num_channel, num_classes, batch_size, opt,
                  learning_rate=0.0001, activation='relu', batch_padding=False):
         self.net_name = net_name
+        self.model_instance_name = 'mobilenet-' + str(num_layer) + '-' + net_name
         self.num_layer = num_layer
         self.img_h = input_h
         self.img_w = input_w
@@ -249,7 +250,7 @@ class mobilenet(object):
         return self.train_op
 
     def get_model_instance_name(self):
-        return self.net_name
+        return self.model_instance_name
 
     def is_complete_train(self):
         if (self.cur_epoch == self.desire_epochs) and (self.cur_step == self.desire_steps):
