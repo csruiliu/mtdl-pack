@@ -147,7 +147,7 @@ def hyperband_pack_bs(batch_size, confs, epochs):
         learning_rate = civ[3]
         activation = civ[4]
 
-        dm = ModelImporter(model_type, str(net_instnace), model_layer, img_height, img_width, num_channel, num_class,
+        dm = ModelImporter(model_type, str(net_instnace[cidx]), model_layer, img_height, img_width, num_channel, num_class,
                            batch_size, opt, learning_rate, activation, batch_padding=False)
         model_entity = dm.get_model_entity()
         model_logit = model_entity.build(features, is_training=True)
@@ -276,7 +276,7 @@ def hyperband_pack_random(confs, epochs):
 
                 for me in entity_pack:
                     me.set_current_step()
-                    if me.isCompleteTrain():
+                    if me.is_complete_train():
                         print("model has been trained completely:", me.get_model_instance_name())
                         sess.run(me.set_batch_size(test_label.shape[0]))
                         train_pack.remove(me.get_train_op())
@@ -387,10 +387,10 @@ def hyperband_pack_knn(confs, epochs):
 
                 sess.run(train_pack, feed_dict={features: train_feature_batch, labels: train_label_batch})
                 for me in entity_pack:
-                    me.setCurStep()
-                    if me.isCompleteTrain():
+                    me.set_current_step()
+                    if me.is_complete_train():
                         print("model has been trained completely:{}".format(me.get_model_instance()))
-                        sess.run(me.setBatchSize(test_label.shape[0]))
+                        sess.run(me.set_batch_size(test_label.shape[0]))
                         train_pack.remove(me.get_train_op())
                         complete_flag = True   
                 

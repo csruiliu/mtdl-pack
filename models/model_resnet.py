@@ -276,6 +276,12 @@ class resnet(object):
     def get_model_instance_name(self):
         self.net_name
 
+    def is_complete_train(self):
+        if (self.cur_epoch == self.desire_epochs) and (self.cur_step == self.desire_steps):
+            return True
+        else:
+            return False
+
     def get_layer_info(self):
         return self.num_conv_layer, self.num_pool_layer, self.num_residual_layer
 
