@@ -1,5 +1,5 @@
 import random as rd
-
+import config.config_parameter as cfg_para
 
 ##################################################################################
 # euclid-based KNN
@@ -10,6 +10,15 @@ switcher = {0: 'model_arch_global',
             2: 'opt_conf_global',
             3: 'learning_rate_global',
             4: 'activation_global'}
+
+model_arch_global = cfg_para.hyperband_model_type_list
+model_layer_global = list()
+for model_arch in model_arch_global:
+    model_layer_global.append(int(model_arch.split('-')[1]))
+batch_size_global = cfg_para.hyperband_batch_size_list
+opt_global = cfg_para.hyperband_optimizer_list
+learning_rate_global = cfg_para.hyperband_learn_rate_list
+activation_global = cfg_para.hyperband_activation_list
 
 def sort_list(list1, list2):
     zipped_pairs = zip(list2, list1)
@@ -22,7 +31,13 @@ def compute_euclid(conf_a, conf_b):
     pair_euclid_distance = 0
     for cfi, cfv in enumerate(conf_a):
         if isinstance(cfv, str):
-            if conf_a[cfi] != conf_b[cfi]:
+            if '-' in cfv:
+                if conf_a[cfi].split('-')[0] == conf_b[cfi].split('-')[0]:
+                    conf_list = list(globals()['model_layer_global'])
+                    conf_a_conf_idx = conf_list.index(cfv)
+                    conf_b_conf_idx = conf_list.index(conf_b[cfi])
+                    pair_euclid_distance += abs(conf_a_conf_idx - conf_b_conf_idx)
+            elif conf_a[cfi] != conf_b[cfi]:
                 pair_euclid_distance += 1
         else:
             conf_list = list(globals()[switcher.get(cfi)])
