@@ -274,7 +274,7 @@ class resnet(object):
         return self.train_op
 
     def get_model_instance_name(self):
-        self.net_name
+        return self.net_name
 
     def is_complete_train(self):
         if (self.cur_epoch == self.desire_epochs) and (self.cur_step == self.desire_steps):
