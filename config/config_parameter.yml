@@ -64,17 +64,17 @@ hyperparams_hyperband:
   # parameters for generating workload
   workload_random_seed: 10000
   model_type:
-    - densenet-121
-    - densenet-169
-    - densenet-201
-    - densenet-264
-    - resnet-18
-    - resnet-34
-    - resnet-50
-    - resnet-101
-    - resnet-152
-    - mobilenet-1
     - mlp-1
+  #  - densenet-121
+  #  - densenet-169
+  #  - densenet-201
+  #  - densenet-264
+  #  - resnet-18
+  #  - resnet-34
+  #  - resnet-50
+  #  - resnet-101
+  #  - resnet-152
+  #  - mobilenet-1
   activation:
     - sigmoid
     - leaky_relu
@@ -85,18 +85,22 @@ hyperparams_hyperband:
     - SGD
     - Adagrad
     - Momentum
-  batch_size_a:
-    - 20
-    - 25
-    - 30
-    - 35
-    - 40
-    - 45
-    - 50
-    - 55
-    - 60
-    - 65
-    - 70
+  batch_size:
+    - 32
+    - 64
+    - 128
+    - 256
+  #  - 20
+  #  - 25
+  #  - 30
+  #  - 35
+  #  - 40
+  #  - 45
+  #  - 50
+  #  - 55
+  #  - 60
+  #  - 65
+  #  - 70
   learning_rate:
     - 0.000001
     - 0.00001
