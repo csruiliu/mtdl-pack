@@ -1,27 +1,13 @@
 import tensorflow as tf
 from tensorflow.python.client import timeline
-import numpy as np
 from timeit import default_timer as timer
 import os
 
+from pack.common.model_builder import build_model_single
+from pack.common.dataset_loader import data_loader
+from pack.tools.img_tool import load_imagenet_raw
 import pack.config.config_parameter as cfg_para
 import pack.config.config_path as cfg_path
-from pack.models.model_importer import ModelImporter
-from pack.tools.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot
-from pack.tools.utils_img_func import load_cifar10_keras
-from pack.tools.utils_img_func import load_mnist_image, load_mnist_label_onehot
-
-
-def build_model():
-    model_name_abbr = np.random.choice(rand_seed, 1, replace=False).tolist()
-    dm = ModelImporter(train_model_type, str(model_name_abbr.pop()), train_layer_num, img_height, img_width, num_channel,
-                       num_class, train_batch_size, train_optimizer, train_learn_rate, train_activation, False)
-
-    model_entity = dm.get_model_entity()
-    model_logit = model_entity.build(features, is_training=True)
-    train_step = model_entity.train(model_logit, labels)
-    eval_step = model_entity.evaluate(model_logit, labels)
-    return train_step, eval_step
 
 
 def train_model():
@@ -33,7 +19,7 @@ def train_model():
     config.allow_soft_placement = True
 
     if train_dataset == 'imagenet':
-        image_list = sorted(os.listdir(train_img_path))
+        image_list = sorted(os.listdir(train_feature))
 
     overall_time_start = timer()
     with tf.Session(config=config) as sess:
@@ -51,7 +37,7 @@ def train_model():
                 batch_end = (i + 1) * train_batch_size
                 if train_dataset == 'imagenet':
                     batch_list = image_list[batch_offset:batch_end]
-                    train_feature_batch = load_imagenet_raw(train_img_path, batch_list, img_height, img_width)
+                    train_feature_batch = load_imagenet_raw(train_feature, batch_list, img_height, img_width)
                 else:
                     train_feature_batch = train_feature[batch_offset:batch_end]
 
@@ -61,14 +47,14 @@ def train_model():
                     profile_path = cfg_path.profile_path
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    sess.run(train_op, feed_dict={features: train_feature_batch, labels: train_label_batch},
+                    sess.run(train_op, feed_dict={feature_ph: train_feature_batch, label_ph: train_label_batch},
                              options=run_options, run_metadata=run_metadata)
                     trace = timeline.Timeline(step_stats=run_metadata.step_stats)
                     trace_file = open(profile_path + '/' + str(train_model_type) + '-' + str(train_batch_size) + '-'
                                       + str(i) + '.json', 'w')
                     trace_file.write(trace.generate_chrome_trace_format(show_dataflow=True, show_memory=True))
                 else:
-                    sess.run(train_op, feed_dict={features: train_feature_batch, labels: train_label_batch})
+                    sess.run(train_op, feed_dict={feature_ph: train_feature_batch, label_ph: train_label_batch})
 
                 if i != 0:
                     end_time = timer()
@@ -77,12 +63,11 @@ def train_model():
                     step_time += dur_time
                     step_count += 1
 
-        acc_avg = sess.run(eval_op, feed_dict={features: test_feature, labels: test_label})
+        acc_avg = sess.run(eval_op, feed_dict={feature_ph: test_feature, label_ph: test_label})
 
     print('evaluation accuracy:{}'.format(acc_avg))
 
     overall_time_end = timer()
-
     overall_time = overall_time_end - overall_time_start
 
     print('overall training time (s):{}, average step time (ms):{}'.format(overall_time, step_time / step_count * 1000))
@@ -114,59 +99,27 @@ if __name__ == '__main__':
     # Hyperparameters due to dataset
     #################################################
 
-    img_width = 0
-    img_height = 0
-    num_class = 0
-    num_channel = 0
+    args_list = data_loader(train_dataset)
 
-    if train_dataset == 'imagenet':
-        train_img_path = cfg_path.imagenet_t50k_img_raw_path
-        train_label_path = cfg_path.imagenet_t50k_label_path
-        test_img_path = cfg_path.imagenet_t1k_img_raw_path
-        test_label_path = cfg_path.imagenet_t1k_label_path
-
-        img_width = cfg_para.img_width_imagenet
-        img_height = cfg_para.img_height_imagenet
-        num_channel = cfg_para.num_channels_rgb
-        num_class = cfg_para.num_class_imagenet
-
-        train_label = load_imagenet_labels_onehot(train_label_path, num_class)
-        test_label = load_imagenet_labels_onehot(test_label_path, num_class)
-
-    elif train_dataset == 'cifar10':
-        img_width = cfg_para.img_width_cifar10
-        img_height = cfg_para.img_height_cifar10
-        num_channel = cfg_para.num_channels_rgb
-        num_class = cfg_para.num_class_cifar10
-
-        train_feature, train_label, test_feature, test_label = load_cifar10_keras()
-
-    elif train_dataset == 'mnist':
-        img_width = cfg_para.img_width_mnist
-        img_height = cfg_para.img_height_mnist
-        num_channel = cfg_para.num_channels_bw
-        num_class = cfg_para.num_class_mnist
-
-        train_img_path = cfg_path.mnist_train_img_path
-        train_label_path = cfg_path.mnist_train_label_path
-        test_img_path = cfg_path.mnist_test_10k_img_path
-        test_label_path = cfg_path.mnist_test_10k_label_path
-
-        train_feature = load_mnist_image(train_img_path)
-        train_label = load_mnist_image(test_img_path)
-        test_feature = load_mnist_image(test_img_path)
-        test_label = load_mnist_label_onehot(test_label_path)
-
-    else:
-        raise ValueError('Training Dataset is invaild, only support mnist, cifar10, imagenet')
+    img_width = args_list[0]
+    img_height = args_list[1]
+    num_channel = args_list[2]
+    num_class = args_list[3]
+    train_feature = args_list[4]
+    train_label = args_list[5]
+    test_feature = args_list[6]
+    test_label = args_list[7]
 
     ###########################################################
     # Build and train model due to input dataset
     ###########################################################
 
-    features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
-    labels = tf.placeholder(tf.int64, [None, num_class])
+    feature_ph = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
+    label_ph = tf.placeholder(tf.int64, [None, num_class])
 
-    train_op, eval_op = build_model()
+    train_op, eval_op = build_model_single(rand_seed, train_model_type, feature_ph, label_ph,
+                                           train_layer_num, img_height, img_width, num_channel,
+                                           num_class, train_batch_size, train_optimizer,
+                                           train_learn_rate, train_activation, False)
 
     train_model()
