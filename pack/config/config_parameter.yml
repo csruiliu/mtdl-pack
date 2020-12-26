@@ -14,7 +14,7 @@ hyperparams_input:
 hyperparams_single_train:
   num_epoch: 1
   random_seed: 10000
-  model_type: resnet
+  model_type: ResNet
   activation: relu
   optimizer: Adam
   batch_size: 32
