@@ -55,9 +55,9 @@ hyperparams_multiple_train:
   use_tb_timeline: False
 
 hyperparams_hyperband:
-  resource_conf: 81
+  resource_conf: 4
   down_rate: 3
-  pack_rate: 9
+  pack_rate: 81
   train_dataset: cifar10
   # policy: none, pack-random, pack-bs, pack-knn
   schedule_policy: none
