@@ -1,5 +1,5 @@
 import random as rd
-import config.config_parameter as cfg_para
+import pack.config.config_parameter as cfg_para
 
 ##################################################################################
 # euclid-based KNN

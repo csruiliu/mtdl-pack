@@ -3,13 +3,13 @@ from tensorflow.python.client import timeline
 from multiprocessing import Pool
 from timeit import default_timer as timer
 import os
-import sys
-sys.path.append(os.path.abspath(".."))
 
-import config.config_parameter as cfg_para
-import config.config_path as cfg_path
-from models.model_importer import ModelImporter
-from utils.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
+import pack.config.config_parameter as cfg_para
+import pack.config.config_path as cfg_path
+from pack.models.model_importer import ModelImporter
+from pack.tools.utils_img_func import load_imagenet_raw, load_imagenet_labels_onehot
+from pack.tools.utils_img_func import load_cifar10_keras
+from pack.tools.utils_img_func import load_mnist_image, load_mnist_label_onehot
 
 
 def train_parallel(para_list_arg):

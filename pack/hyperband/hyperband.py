@@ -3,11 +3,8 @@ import numpy as np
 import itertools
 from operator import itemgetter
 from math import log, ceil, floor
-import os
-import sys
-sys.path.append(os.path.abspath(".."))
 
-import config.config_parameter as cfg_para
+import pack.config.config_parameter as cfg_para
 from hyperband_sched_engine import hyperband_original, hyperband_pack_bs, hyperband_pack_random, hyperband_pack_knn
 from knn_engine import knn_conf_bs, knn_conf_euclid
 
