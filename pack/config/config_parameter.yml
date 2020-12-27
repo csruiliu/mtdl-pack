@@ -49,9 +49,7 @@ hyperparams_multiple_train:
     - 0.00001
     - 0.00001
   train_dataset: cifar10
-  batch_padding: False
   use_cpu: False
-  same_input: True
   use_tb_timeline: False
 
 hyperparams_hyperband:
