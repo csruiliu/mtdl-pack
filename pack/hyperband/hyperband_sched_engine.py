@@ -27,11 +27,11 @@ def evaluate_pack_model(tf_sess, feature_ph, label_ph, pack_model):
             for n in range(num_batch_eval):
                 batch_offset = n * imagenet_batch_size_eval
                 batch_end = (n + 1) * imagenet_batch_size_eval
-                test_batch_list = test_image_list[batch_offset:batch_end]
-                test_feature_batch = load_imagenet_raw(feature_input, test_batch_list, img_height, img_width)
-                test_label_batch = label_input[batch_offset:batch_end]
-                acc_batch = tf_sess.run(eval_op, feed_dict={feature_ph: test_feature_batch,
-                                                            label_ph: test_label_batch})
+                eval_batch_list = test_image_list[batch_offset:batch_end]
+                eval_feature_batch = load_imagenet_raw(feature_input, eval_batch_list, img_height, img_width)
+                eval_label_batch = label_input[batch_offset:batch_end]
+                acc_batch = tf_sess.run(eval_op, feed_dict={feature_ph: eval_feature_batch,
+                                                            label_ph: eval_label_batch})
                 acc_sum += acc_batch
             acc_avg = acc_sum / num_batch_eval
             acc_pack.append(acc_avg)
@@ -142,7 +142,6 @@ def hyperband_pack_bs(batch_size, confs, epochs):
 
     train_pack = list()
     eval_pack = list()
-    acc_pack = list()
 
     for cidx, civ in enumerate(confs):
         model_arch = civ[0]
