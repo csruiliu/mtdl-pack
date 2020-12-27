@@ -7,7 +7,7 @@ import os
 import pack.config.config_parameter as cfg_para
 import pack.config.config_path as cfg_path
 from pack.core.model_importer import ModelImporter
-from pack.core.dataset_loader import data_loader
+from pack.core.dataset_loader import load_dataset_para, load_train_dataset
 from pack.tools.img_tool import load_imagenet_raw
 
 
@@ -34,14 +34,8 @@ def train_pack_diff_input():
     # load dataset
     #################################################
 
-    args_list = data_loader(train_dataset)
-
-    img_width = args_list[0]
-    img_height = args_list[1]
-    num_channel = args_list[2]
-    num_class = args_list[3]
-    train_feature_input = args_list[4]
-    train_label_input = args_list[5]
+    img_width, img_height, num_channel, num_class = load_dataset_para(train_dataset)
+    train_feature_input, train_label_input = load_train_dataset(train_dataset)
 
     ##################################################
     # build packed model with different input
@@ -162,16 +156,8 @@ def train_pack():
     # load dataset
     #################################################
 
-    args_list = data_loader(train_dataset)
-
-    img_width = args_list[0]
-    img_height = args_list[1]
-    num_channel = args_list[2]
-    num_class = args_list[3]
-    train_feature_input = args_list[4]
-    train_label_input = args_list[5]
-    #test_feature = args_list[6]
-    #test_label = args_list[7]
+    img_width, img_height, num_channel, num_class = load_dataset_para(train_dataset)
+    train_feature_input, train_label_input = load_train_dataset(train_dataset)
 
     #########################
     # build packed model

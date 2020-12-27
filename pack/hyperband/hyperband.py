@@ -6,7 +6,8 @@ from math import log, ceil, floor
 
 import pack.config.config_parameter as cfg_para
 from hyperband_sched_engine import hyperband_original, hyperband_pack_bs, hyperband_pack_random, hyperband_pack_knn
-from knn_engine import knn_conf_bs, knn_conf_euclid
+from knn_engine import knn_conf_euclid
+#from knn_engine import knn_conf_bs
 
 
 class Hyperband:
@@ -109,9 +110,8 @@ class Hyperband:
                     result['counter'] = self.counter
                     result['params'] = t
 
-                    print("current run {}, acc: {:.5f} | best acc so far: {:.5f} (run {})\n".format(self.counter, acc,
-                                                                                                    self.best_acc,
-                                                                                                    self.best_counter))
+                    print("current run {}, acc: {:.5f} | best acc so far: {:.5f} (run {})\n"
+                          .format(self.counter, acc, self.best_acc, self.best_counter))
                     self.results.append(result)
 
                 indices = np.argsort(list_acc)
@@ -238,7 +238,7 @@ class Hyperband:
         return self.results
 
 
-if __name__ == "__main__":
+def hyperband_run():
     resource_conf = cfg_para.hyperband_resource_conf
     down_rate = cfg_para.hyperband_down_rate
     sch_policy = cfg_para.hyperband_schedule_policy
@@ -265,6 +265,6 @@ if __name__ == "__main__":
 
     dur_time = end_time - start_time
     print("{} total, best:\n".format(len(results)))
-    best_hp = sorted(results, key = lambda x: x['acc'])[-1]
+    best_hp = sorted(results, key=lambda x: x['acc'])[-1]
     print(best_hp)
     print('total exp time: {}'.format(dur_time))

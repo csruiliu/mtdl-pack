@@ -7,12 +7,12 @@ from timeit import default_timer as timer
 
 import pack.config.config_parameter as cfg_para
 import pack.config.config_path as cfg_path
-from pack.core.dataset_loader import data_loader
+from pack.core.dataset_loader import load_dataset_para, load_train_dataset
 from pack.core.model_importer import ModelImporter
 from pack.tools.img_tool import load_imagenet_raw
 
 
-def train_model(train_step_arg, batch_size_arg, model_type_arg, tidx_arg, dataset_args_list, global_args):
+def train_model(train_step_arg, batch_size_arg, model_type_arg, tidx_arg, global_args):
     train_dataset = cfg_para.multi_train_dataset
     num_epoch = cfg_para.multi_num_epoch
     use_tf_timeline = cfg_para.multi_use_tb_timeline
@@ -23,14 +23,8 @@ def train_model(train_step_arg, batch_size_arg, model_type_arg, tidx_arg, datase
     else:
         train_device = '/gpu:0'
 
-    img_width = dataset_args_list[0]
-    img_height = dataset_args_list[1]
-    #num_channel = dataset_args_list[2]
-    #num_class = dataset_args_list[3]
-    train_feature_input = dataset_args_list[4]
-    train_label_input = dataset_args_list[5]
-    #test_feature_input = dataset_args_list[6]
-    #test_label_input = dataset_args_list[7]
+    img_width, img_height, num_channel, num_class = load_dataset_para(train_dataset)
+    train_feature_input, train_label_input = load_train_dataset(train_dataset)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -89,15 +83,10 @@ def train_sequential():
     train_dataset = cfg_para.multi_train_dataset
 
     ##########################################
-    # load dataset
+    # load dataset parameters
     ##########################################
 
-    args_list = data_loader(train_dataset)
-
-    img_width = args_list[0]
-    img_height = args_list[1]
-    num_channel = args_list[2]
-    num_class = args_list[3]
+    img_width, img_height, num_channel, num_class = load_dataset_para(train_dataset)
 
     ##########################################
     # build models
@@ -128,8 +117,7 @@ def train_sequential():
     start_time = timer()
     for tidx, tm in enumerate(train_op_list):
         p = Process(target=train_model, args=(tm, batch_size_list[tidx],
-                                              model_type_list[tidx], tidx,
-                                              args_list, names))
+                                              model_type_list[tidx], tidx, names))
         p.start()
         p.join()
     end_time = timer()

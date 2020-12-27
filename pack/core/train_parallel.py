@@ -6,14 +6,12 @@ import os
 
 import pack.config.config_parameter as cfg_para
 import pack.config.config_path as cfg_path
-
-from pack.core.dataset_loader import data_loader
+from pack.core.dataset_loader import load_dataset_para, load_train_dataset
 from pack.core.model_importer import ModelImporter
 from pack.tools.img_tool import load_imagenet_raw
 
 
 def train_model(job_id):
-
     model_type_list = cfg_para.multi_model_type
     num_layer_list = cfg_para.multi_num_layer
     activation_list = cfg_para.multi_activation
@@ -46,14 +44,8 @@ def train_model(job_id):
     # load dataset
     ##########################################
 
-    args_list = data_loader(train_dataset)
-
-    img_width = args_list[0]
-    img_height = args_list[1]
-    num_channel = args_list[2]
-    num_class = args_list[3]
-    train_feature_input = args_list[4]
-    train_label_input = args_list[5]
+    img_width, img_height, num_channel, num_class = load_dataset_para(train_dataset)
+    train_feature_input, train_label_input = load_train_dataset(train_dataset)
 
     ##########################################
     # build model

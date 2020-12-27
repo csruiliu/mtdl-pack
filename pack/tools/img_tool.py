@@ -106,7 +106,7 @@ def load_cifar10_train(path):
 ########################################################
 # read cifar-10 data, testing data
 ########################################################
-def load_cifar10_test(path):
+def load_cifar10_eval(path):
     with open(path + '/test_batch', 'rb') as fo:
         test_batch = pickle.load(fo, encoding='bytes')
         test_data = test_batch[b'data']
@@ -141,7 +141,8 @@ def load_imagenet_raw(image_dir, batch_list, img_h, img_w):
 ########################################################
 # read imagenet label
 ########################################################
-def load_imagenet_labels_onehot(path, num_classes):
+def load_imagenet_labels_onehot(path):
+    num_classes = 1000
     lines = open(path).readlines()
     labels_array = np.zeros((len(lines), num_classes))
     for idx, val in enumerate(lines):

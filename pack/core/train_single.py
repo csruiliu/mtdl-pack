@@ -7,7 +7,7 @@ from tensorflow.python.client import timeline
 import pack.config.config_parameter as cfg_para
 import pack.config.config_path as cfg_path
 from pack.core.model_importer import ModelImporter
-from pack.core.dataset_loader import data_loader
+from pack.core.dataset_loader import load_dataset_para, load_train_dataset, load_eval_dataset
 from pack.tools.img_tool import load_imagenet_raw
 
 
@@ -36,16 +36,9 @@ def train_single():
     # load dataset
     ##########################################
 
-    args_list = data_loader(train_dataset)
-
-    img_width = args_list[0]
-    img_height = args_list[1]
-    num_channel = args_list[2]
-    num_class = args_list[3]
-    train_feature_input = args_list[4]
-    train_label_input = args_list[5]
-    test_feature_input = args_list[6]
-    test_label_input = args_list[7]
+    img_width, img_height, num_channel, num_class = load_dataset_para(train_dataset)
+    train_feature_input, train_label_input = load_train_dataset(train_dataset)
+    eval_feature_input, eval_label_input = load_eval_dataset(train_dataset)
 
     ##########################################
     # build model
@@ -123,12 +116,13 @@ def train_single():
                         step_time += dur_time
                         step_count += 1
 
-            acc_avg = sess.run(eval_op, feed_dict={feature_ph: test_feature_input,
-                                               label_ph: test_label_input})
+            acc_avg = sess.run(eval_op, feed_dict={feature_ph: eval_feature_input,
+                                                   label_ph: eval_label_input})
 
     print('evaluation accuracy:{}'.format(acc_avg))
 
     overall_time_end = timer()
     overall_time = overall_time_end - overall_time_start
 
-    print('overall training time (s):{}, average step time (ms):{}'.format(overall_time, step_time / step_count * 1000))
+    print('overall training time (s):{}, average step time (ms):{}'
+          .format(overall_time, step_time / step_count * 1000))
