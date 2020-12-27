@@ -1,19 +1,18 @@
 import numpy as np
-
-import tensorflow as tf
-from tensorflow.python.client import timeline
 from timeit import default_timer as timer
 import os
+import tensorflow as tf
+from tensorflow.python.client import timeline
 
 import pack.config.config_parameter as cfg_para
 import pack.config.config_path as cfg_path
-
 from pack.core.model_importer import ModelImporter
 from pack.core.dataset_loader import data_loader
 from pack.tools.img_tool import load_imagenet_raw
 
 
 def train_single():
+    print('start training single')
     rand_seed = cfg_para.single_rand_seed
     num_epoch = cfg_para.single_num_epoch
 
@@ -66,6 +65,9 @@ def train_single():
     train_op = model_entity.train(model_logit, label_ph)
     eval_op = model_entity.evaluate(model_logit, label_ph)
 
+    ##########################################
+    # train model
+    ##########################################
 
     step_time = 0
     step_count = 0
@@ -130,6 +132,3 @@ def train_single():
     overall_time = overall_time_end - overall_time_start
 
     print('overall training time (s):{}, average step time (ms):{}'.format(overall_time, step_time / step_count * 1000))
-
-
-def train_sequential():
