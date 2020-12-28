@@ -1,7 +1,7 @@
 import importlib
 
 
-class ModelImporter(object):
+class ModelImporter:
     def __init__(self,
                  model_type,
                  model_instance_name,
