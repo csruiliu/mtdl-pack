@@ -1,1 +1,3 @@
-# Pack Primitive for Efficient Training 
+# Understanding and Optimizing Packed Neural Network Training for Hyper-Parameter Tuning # 
+
+We analyze the benefits and limitations of packing multiple models together to take advantage of available GPU resources for model training. Under the proper conditions, this packing can bring up to 40% reduction in latency per model packed, compared with training the models sequentially on a GPU. We further demonstrate that pack primitive can be used to accelerate a state-of-the-art hyperparameter tuning algorithm. Our end-to-end tuning system demonstrates a 2.7x speedup in terms of time to find the best model by improving GPU utilization. 
