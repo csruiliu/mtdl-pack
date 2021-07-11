@@ -13,7 +13,7 @@ hyperparams_input:
 
 hyperparams_single_train:
   num_epoch: 1
-  random_seed: 10000
+  random_seed: 42
   model_type: ResNet
   activation: relu
   optimizer: Adam
@@ -26,7 +26,7 @@ hyperparams_single_train:
 
 hyperparams_multiple_train:
   num_epoch: 1
-  random_seed: 10000
+  random_seed: 42
   model_type:
     - mobilenet
     - mobilenet
@@ -60,19 +60,19 @@ hyperparams_hyperband:
   # policy: none, pack-random, pack-bs, pack-knn
   schedule_policy: none
   # parameters for generating workload
-  workload_random_seed: 10000
+  workload_random_seed: 42
   model_type:
     - mlp-1
-  #  - densenet-121
-  #  - densenet-169
-  #  - densenet-201
-  #  - densenet-264
-  #  - resnet-18
-  #  - resnet-34
-  #  - resnet-50
-  #  - resnet-101
-  #  - resnet-152
-  #  - mobilenet-1
+    - densenet-121
+    - densenet-169
+    - densenet-201
+    - densenet-264
+    - resnet-18
+    - resnet-34
+    - resnet-50
+    - resnet-101
+    - resnet-152
+    - mobilenet-1
   activation:
     - sigmoid
     - leaky_relu
@@ -88,17 +88,6 @@ hyperparams_hyperband:
     - 64
     - 128
     - 256
-  #  - 20
-  #  - 25
-  #  - 30
-  #  - 35
-  #  - 40
-  #  - 45
-  #  - 50
-  #  - 55
-  #  - 60
-  #  - 65
-  #  - 70
   learning_rate:
     - 0.000001
     - 0.00001

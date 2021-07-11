@@ -64,11 +64,11 @@ multi_use_tb_timeline = hyperparams_multi_cfg['use_tb_timeline']
 ##########################################
 
 hyperparams_hyperband = cfg['hyperparams_hyperband']
+hyperband_random_seed = hyperparams_hyperband['workload_random_seed']
 hyperband_resource_conf = hyperparams_hyperband['resource_conf']
 hyperband_down_rate = hyperparams_hyperband['down_rate']
 hyperband_pack_rate = hyperparams_hyperband['pack_rate']
 hyperband_schedule_policy = hyperparams_hyperband['schedule_policy']
-hyperband_random_seed = hyperparams_hyperband['workload_random_seed']
 hyperband_model_type_list = hyperparams_hyperband['model_type']
 hyperband_activation_list = hyperparams_hyperband['activation']
 hyperband_optimizer_list = hyperparams_hyperband['optimizer']
