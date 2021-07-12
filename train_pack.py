@@ -4,11 +4,10 @@ import numpy as np
 from timeit import default_timer as timer
 import os
 
-import pack.config.config_parameter as cfg_para
-import pack.config.config_path as cfg_path
-from pack.core.model_importer import ModelImporter
-from pack.core.dataset_loader import load_dataset_para, load_train_dataset
-from pack.tools.img_tool import load_imagenet_raw
+import config.config_parameter as cfg_para
+import config.config_path as cfg_path
+from tools.model_tool import ModelImporter
+from tools.dataset_tool import load_dataset_para, load_train_dataset, load_imagenet_raw
 
 
 def train_pack_diff_input():
