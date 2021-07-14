@@ -6,12 +6,10 @@ from datetime import datetime
 import os
 import sys
 
-import pack.config.config_parameter as cfg_para
-import pack.config.config_path as cfg_path
-from pack.core.model_importer import ModelImporter
-from pack.tools.img_tool import load_imagenet_raw, load_imagenet_labels_onehot
-from pack.tools.img_tool import load_cifar10_keras
-from pack.tools.img_tool import load_mnist_image, load_mnist_label_onehot
+import config.config_parameter as cfg_para
+import config.config_path as cfg_path
+from tools.model_tool import ModelImporter
+from tools.dataset_tool import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
 
 
 def gen_confs():
@@ -121,14 +119,34 @@ def profile_pack_model(job_a, job_b):
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
-    dm_a = ModelImporter(job_model_type_a, str(net_instnace[0]), job_num_layer_a, img_height, img_width, num_channel,
-                         num_class, job_batch_size_a, job_opt_a, job_learn_rate_a, job_activation_a, batch_padding=True)
+    dm_a = ModelImporter(job_model_type_a,
+                         str(net_instnace[0]),
+                         job_num_layer_a,
+                         img_height,
+                         img_width,
+                         num_channel,
+                         num_class,
+                         job_batch_size_a,
+                         job_opt_a,
+                         job_learn_rate_a,
+                         job_activation_a,
+                         batch_padding=True)
     model_entity_a = dm_a.get_model_entity()
     model_logit_a = model_entity_a.build(features, is_training=True)
     train_step_a = model_entity_a.train(model_logit_a, labels)
 
-    dm_b = ModelImporter(job_model_type_b, str(net_instnace[1]), job_num_layer_b, img_height, img_width, num_channel,
-                         num_class, job_batch_size_b, job_opt_b, job_learn_rate_b, job_activation_b, batch_padding=True)
+    dm_b = ModelImporter(job_model_type_b,
+                         str(net_instnace[1]),
+                         job_num_layer_b,
+                         img_height,
+                         img_width,
+                         num_channel,
+                         num_class,
+                         job_batch_size_b,
+                         job_opt_b,
+                         job_learn_rate_b,
+                         job_activation_b,
+                         batch_padding=True)
     model_entity_b = dm_b.get_model_entity()
     model_logit_b = model_entity_b.build(features, is_training=True)
     train_step_b = model_entity_b.train(model_logit_b, labels)
@@ -229,8 +247,8 @@ if __name__ == "__main__":
 
         train_img_path = cfg_path.mnist_train_img_path
         train_label_path = cfg_path.mnist_train_label_path
-        test_img_path = cfg_path.mnist_test_10k_img_path
-        test_label_path = cfg_path.mnist_test_10k_label_path
+        test_img_path = cfg_path.mnist_eval_10k_img_path
+        test_label_path = cfg_path.mnist_eval_10k_label_path
 
         train_feature = load_mnist_image(train_img_path)
         train_label = load_mnist_image(test_img_path)

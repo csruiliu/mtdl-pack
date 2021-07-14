@@ -144,8 +144,7 @@ def load_imagenet_raw(image_dir, batch_list, img_h, img_w):
 ########################################################
 # read imagenet label
 ########################################################
-def load_imagenet_labels_onehot(path):
-    num_classes = 1000
+def load_imagenet_labels_onehot(path, num_classes):
     lines = open(path).readlines()
     labels_array = np.zeros((len(lines), num_classes))
     for idx, val in enumerate(lines):
