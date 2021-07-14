@@ -1,24 +1,17 @@
 #datetime=$(date +%Y%m%d%H%M)
 #timestamp=$(date +%Y%m%d%H%M%S.%3N)
 
-#Query Type can be one of the following:
-#utilization.gpu
-#utilization.memory
-#memory.total
-#memory.free
-#memory.used
-
-
-PYCMD=""
-NVISMI=""
 lms=10
 #queryType="memory.used,memory.free,memory.total,utilization.memory,utilization.gpu"
 queryType="memory.used"
 while getopts "f:" opt; do
     case $opt in
         f)
-        fileName=$OPTARG
-        ;;
+          fileName=$OPTARG
+          ;;
+        *)
+          echo "invalid flag"
+          ;;
     esac
 done
 
