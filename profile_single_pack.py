@@ -31,14 +31,30 @@ def profile_single_model(job):
     np.random.seed(dt.microsecond)
     net_instnace = np.random.randint(sys.maxsize)
 
-    model_name = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(net_instnace, job_model_type, job_num_layer, job_batch_size,
-                                                          job_learn_rate, job_opt, job_activation, train_dataset)
+    model_name = '{0}-{1}-{2}-{3}-{4}-{5}-{6}-{7}'.format(net_instnace,
+                                                          job_model_type,
+                                                          job_num_layer,
+                                                          job_batch_size,
+                                                          job_learn_rate,
+                                                          job_opt,
+                                                          job_activation,
+                                                          train_dataset)
 
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
-    dm = ModelImporter(job_model_type, str(net_instnace), job_num_layer, img_height, img_width, num_channel,
-                       num_class, job_batch_size, job_opt, job_learn_rate, job_activation, batch_padding=True)
+    dm = ModelImporter(job_model_type,
+                       str(net_instnace),
+                       job_num_layer,
+                       img_height,
+                       img_width,
+                       num_channel,
+                       num_class,
+                       job_batch_size,
+                       job_opt,
+                       job_learn_rate,
+                       job_activation,
+                       batch_padding=True)
 
     model_entity = dm.get_model_entity()
     model_logit = model_entity.build(features, is_training=True)
@@ -96,8 +112,13 @@ def profile_pack_model(job_a, job_b):
     job_activation_a = job_a[3]
     job_learn_rate_a = job_a[4]
 
-    model_name_a = '{0}-{1}-{2}-{3}-{4}-{5}-{6}'.format(job_model_type_a, job_num_layer_a, job_batch_size_a,
-                                                        job_learn_rate_a, job_opt_a, job_activation_a, train_dataset)
+    model_name_a = '{0}-{1}-{2}-{3}-{4}-{5}-{6}'.format(job_model_type_a,
+                                                        job_num_layer_a,
+                                                        job_batch_size_a,
+                                                        job_learn_rate_a,
+                                                        job_opt_a,
+                                                        job_activation_a,
+                                                        train_dataset)
 
     job_model_arch_b = job_b[0]
     job_model_type_b = job_model_arch_b.split('-')[0]
@@ -107,8 +128,13 @@ def profile_pack_model(job_a, job_b):
     job_activation_b = job_b[3]
     job_learn_rate_b = job_b[4]
 
-    model_name_b = '{0}-{1}-{2}-{3}-{4}-{5}-{6}'.format(job_model_type_b, job_num_layer_b, job_batch_size_b,
-                                                        job_learn_rate_b, job_opt_b, job_activation_b, train_dataset)
+    model_name_b = '{0}-{1}-{2}-{3}-{4}-{5}-{6}'.format(job_model_type_b,
+                                                        job_num_layer_b,
+                                                        job_batch_size_b,
+                                                        job_learn_rate_b,
+                                                        job_opt_b,
+                                                        job_activation_b,
+                                                        train_dataset)
 
     max_batch_size = max(job_batch_size_a, job_batch_size_b)
 
