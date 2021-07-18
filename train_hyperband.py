@@ -623,7 +623,7 @@ class Hyperband:
 
         return self.results
 
-    def run_pack_knn(self, topk, knn_engine):
+    def run_pack_knn(self, topk, knn_instance):
         for s in reversed(range(self.s_max + 1)):
             n = ceil(self.B / self.R / (s + 1) * (self.eta ** s))
             r = self.R * (self.eta ** (-s))
@@ -635,7 +635,7 @@ class Hyperband:
                 print("\n*** {} bracket | {} configurations x {} iterations each ***".format(s, n_i, r_i))
 
                 val_acc = []
-                trial_pack_collection = knn_engine.knn_conf_euclid(T, topk)
+                trial_pack_collection = knn_instance.knn_conf_euclid(T, topk)
 
                 for tpidx in trial_pack_collection:
                     acc_pack = self.hyperband_pack_knn(tpidx, r_i)
