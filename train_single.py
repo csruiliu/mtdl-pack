@@ -48,9 +48,18 @@ def train_single():
 
     model_name_abbr = np.random.choice(rand_seed, 1, replace=False).tolist()
 
-    dm = ModelImporter(model_type, str(model_name_abbr.pop()), num_layer,
-                       img_height, img_width, num_channel, num_class, batch_size,
-                       optimizer, learning_rate, activation, batch_padding=False)
+    dm = ModelImporter(model_type,
+                       str(model_name_abbr.pop()),
+                       num_layer,
+                       img_height,
+                       img_width,
+                       num_channel,
+                       num_class,
+                       batch_size,
+                       optimizer,
+                       learning_rate,
+                       activation,
+                       batch_padding=False)
 
     model_entity = dm.get_model_entity()
     model_logit = model_entity.build(feature_ph, is_training=True)
@@ -99,8 +108,10 @@ def train_single():
                         profile_path = cfg_path.profile_path
                         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         run_metadata = tf.RunMetadata()
-                        sess.run(train_op, feed_dict={feature_ph: train_feature_batch, label_ph: train_label_batch},
-                                 options=run_options, run_metadata=run_metadata)
+                        sess.run(train_op,
+                                 feed_dict={feature_ph: train_feature_batch, label_ph: train_label_batch},
+                                 options=run_options,
+                                 run_metadata=run_metadata)
                         trace = timeline.Timeline(step_stats=run_metadata.step_stats)
                         trace_file = open(profile_path + '/' + str(model_type) + '-' + str(batch_size) + '-'
                                           + str(i) + '.json', 'w')
