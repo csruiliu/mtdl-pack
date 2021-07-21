@@ -11,7 +11,12 @@ from tools.dataset_tool import load_dataset_para, load_train_dataset, load_image
 from tools.model_tool import ModelImporter
 
 
-def train_model(train_step_arg, batch_size_arg, model_type_arg, tidx_arg, global_args):
+def train_model(train_step_arg,
+                batch_size_arg,
+                model_type_arg,
+                tidx_arg,
+                global_args):
+
     train_dataset = cfg_para.multi_train_dataset
     num_epoch = cfg_para.multi_num_epoch
     use_tf_timeline = cfg_para.multi_use_tb_timeline
@@ -55,9 +60,11 @@ def train_model(train_step_arg, batch_size_arg, model_type_arg, tidx_arg, global
                         profile_path = cfg_path.profile_path
                         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         run_metadata = tf.RunMetadata()
-                        sess.run(train_step_arg, feed_dict={global_args['features' + str(tidx_arg)]: feature_batch,
-                                                            global_args['labels' + str(tidx_arg)]: label_batch},
-                                 options=run_options, run_metadata=run_metadata)
+                        sess.run(train_step_arg,
+                                 feed_dict={global_args['features' + str(tidx_arg)]: feature_batch,
+                                            global_args['labels' + str(tidx_arg)]: label_batch},
+                                 options=run_options,
+                                 run_metadata=run_metadata)
                         trace = timeline.Timeline(step_stats=run_metadata.step_stats)
                         trace_file = open(profile_path + '/' + str(model_type_arg) + '-'
                                           + str(batch_size_arg) + '-' + str(i) + '.json', 'w')
@@ -99,10 +106,18 @@ def train_sequential():
     train_op_list = list()
     model_name_abbr = np.random.choice(rand_seed, len(model_type_list), replace=False).tolist()
     for midx, mvalue in enumerate(model_type_list):
-        dm = ModelImporter(mvalue, str(model_name_abbr.pop()), num_layer_list[midx],
-                           img_width, img_height, num_channel, num_class,
-                           batch_size_list[midx], optimizer_list[midx],
-                           learning_rate_list[midx], activation_list[midx], batch_padding=False)
+        dm = ModelImporter(mvalue,
+                           str(model_name_abbr.pop()),
+                           num_layer_list[midx],
+                           img_width,
+                           img_height,
+                           num_channel,
+                           num_class,
+                           batch_size_list[midx],
+                           optimizer_list[midx],
+                           learning_rate_list[midx],
+                           activation_list[midx],
+                           batch_padding=False)
 
         model_entity = dm.get_model_entity()
         model_logit = model_entity.build(names['features' + str(midx)], is_training=True)
@@ -115,8 +130,11 @@ def train_sequential():
 
     start_time = timer()
     for tidx, tm in enumerate(train_op_list):
-        p = Process(target=train_model, args=(tm, batch_size_list[tidx],
-                                              model_type_list[tidx], tidx, names))
+        p = Process(target=train_model, args=(tm,
+                                              batch_size_list[tidx],
+                                              model_type_list[tidx],
+                                              tidx,
+                                              names))
         p.start()
         p.join()
     end_time = timer()
