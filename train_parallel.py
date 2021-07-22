@@ -53,9 +53,18 @@ def train_model(job_id):
     features = tf.placeholder(tf.float32, [None, img_width, img_height, num_channel])
     labels = tf.placeholder(tf.int64, [None, num_class])
 
-    dm = ModelImporter(model_type, str(job_id), num_layer, img_height,
-                       img_width, num_channel, num_class, batch_size,
-                       optimizer, learning_rate, activation, batch_padding=False)
+    dm = ModelImporter(model_type,
+                       str(job_id),
+                       num_layer,
+                       img_height,
+                       img_width,
+                       num_channel,
+                       num_class,
+                       batch_size,
+                       optimizer,
+                       learning_rate,
+                       activation,
+                       batch_padding=False)
 
     model_entity = dm.get_model_entity()
     model_logit = model_entity.build(features, is_training=True)
@@ -102,8 +111,10 @@ def train_model(job_id):
                         profile_path = cfg_path.profile_path
                         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         run_metadata = tf.RunMetadata()
-                        sess.run(train_op, feed_dict={features: train_feature_batch, labels: train_label_batch},
-                                 options=run_options, run_metadata=run_metadata)
+                        sess.run(train_op,
+                                 feed_dict={features: train_feature_batch, labels: train_label_batch},
+                                 options=run_options,
+                                 run_metadata=run_metadata)
 
                         trace = timeline.Timeline(step_stats=run_metadata.step_stats)
                         trace_file = open(profile_path + '/' + str(model_type) + '-'
