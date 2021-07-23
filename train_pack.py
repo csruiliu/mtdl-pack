@@ -49,10 +49,18 @@ def train_pack_diff_input():
     train_op_pack = list()
 
     for midx, mt in enumerate(model_type_list):
-        dm = ModelImporter(mt, str(model_name_abbr.pop()), num_layer_list[midx],
-                           img_height, img_width, num_channel, num_class,
-                           batch_size_list[midx], optimizer_list[midx],
-                           learning_rate_list[midx], activation_list[midx], False)
+        dm = ModelImporter(mt,
+                           str(model_name_abbr.pop()),
+                           num_layer_list[midx],
+                           img_height,
+                           img_width,
+                           num_channel,
+                           num_class,
+                           batch_size_list[midx],
+                           optimizer_list[midx],
+                           learning_rate_list[midx],
+                           activation_list[midx],
+                           batch_padding=False)
 
         model_entity = dm.get_model_entity()
         model_logit = model_entity.build(names['features' + str(midx)], is_training=True)
@@ -169,9 +177,17 @@ def train_pack():
     train_op_pack = list()
 
     for midx, mt in enumerate(model_type_list):
-        dm = ModelImporter(mt, str(model_name_abbr.pop()), num_layer_list[midx], img_height,
-                           img_width, num_channel, num_class, batch_size_list[midx],
-                           optimizer_list[midx], learning_rate_list[midx], activation_list[midx],
+        dm = ModelImporter(mt,
+                           str(model_name_abbr.pop()),
+                           num_layer_list[midx],
+                           img_height,
+                           img_width,
+                           num_channel,
+                           num_class,
+                           batch_size_list[midx],
+                           optimizer_list[midx],
+                           learning_rate_list[midx],
+                           activation_list[midx],
                            batch_padding=is_batch_padding)
 
         model_entity = dm.get_model_entity()
@@ -221,8 +237,10 @@ def train_pack():
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
 
-                    sess.run(train_op_pack, feed_dict={features: train_feature_batch, labels: train_label_batch},
-                             options=run_options, run_metadata=run_metadata)
+                    sess.run(train_op_pack,
+                             feed_dict={features: train_feature_batch, labels: train_label_batch},
+                             options=run_options,
+                             run_metadata=run_metadata)
 
                     trace = timeline.Timeline(step_stats=run_metadata.step_stats)
                     trace_file = open(profile_path + '/' + '-'.join(map(str, set(model_type_list))) + '-' +
