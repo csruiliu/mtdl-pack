@@ -9,7 +9,8 @@ import sys
 import config.config_parameter as cfg_para
 import config.config_path as cfg_path
 from tools.model_tool import ModelImporter
-from tools.dataset_tool import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras, load_mnist_image, load_mnist_label_onehot
+from tools.dataset_tool import load_imagenet_raw, load_imagenet_labels_onehot, load_cifar10_keras
+from tools.dataset_tool import load_mnist_image, load_mnist_label_onehot
 
 
 def gen_confs():
@@ -217,7 +218,7 @@ def profile_pack_model(job_a, job_b):
                 step_count += 1
 
     avg_step_time = step_time / step_count * 1000
-    print('Pack {} and {}: {}'.format(model_name_a, model_name_b, avg_step_time))
+    print(f'Pack {model_name_a} and {model_name_b}: {avg_step_time}')
 
 
 if __name__ == "__main__":

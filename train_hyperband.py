@@ -179,7 +179,7 @@ class Hyperband:
             else:
                 acc_avg = sess.run(eval_op, feed_dict={features: eval_feature_input, labels: eval_label_input})
 
-        print("Accuracy:", acc_avg)
+        print(f'Accuracy: {acc_avg}')
         return acc_avg
 
     def hyperband_pack_bs(self, batch_size, confs, epochs):
@@ -253,7 +253,7 @@ class Hyperband:
 
             acc_pack = evaluate_pack_model(sess, features, labels, eval_pack)
 
-        print("Accuracy:", acc_pack)
+        print(f'Accuracy: {acc_pack}')
         return acc_pack
 
     def hyperband_pack_random(self, confs, epochs):
@@ -462,7 +462,7 @@ class Hyperband:
 
             acc_pack = evaluate_pack_model(sess, features, labels, eval_pack)
 
-        print("Accuracy:", acc_pack)
+        print(f'Accuracy: {acc_pack}')
         return acc_pack
 
     def run_simulation(self):
@@ -632,7 +632,7 @@ class Hyperband:
             for i in range(s + 1):
                 n_i = floor(n * self.eta ** (-i))
                 r_i = int(r * self.eta ** (i))
-                print("\n*** {} bracket | {} configurations x {} iterations each ***".format(s, n_i, r_i))
+                print(f'\n*** {s} bracket | {n_i} configurations x {r_i} iterations each ***')
 
                 val_acc = []
                 trial_pack_collection = knn_instance.knn_conf_euclid(T, topk)
