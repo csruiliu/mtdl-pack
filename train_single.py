@@ -134,5 +134,8 @@ def train_single():
     overall_time_end = timer()
     overall_time = overall_time_end - overall_time_start
 
-    print('overall training time (s):{}, average step time (ms):{}'
-          .format(overall_time, step_time / step_count * 1000))
+    print(f'overall training time (s):{overall_time}, average step time (ms):{step_time / step_count * 1000}')
+
+
+if __name__ == '__main__':
+    train_single()

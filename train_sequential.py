@@ -139,4 +139,8 @@ def train_sequential():
         p.join()
     end_time = timer()
     dur_time = end_time - start_time
-    print("total training time(s): {}".format(dur_time))
+    print(f'total training time(s): {dur_time}')
+
+
+if __name__ == '__main__':
+    train_sequential()

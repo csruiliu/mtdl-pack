@@ -130,7 +130,7 @@ def train_model(job_id):
                         step_time += dur_time
                         step_count += 1
 
-    step_time_result = 'average step time (ms) of {}: {}'.format(model_name, step_time / step_count * 1000)
+    step_time_result = f'average step time (ms) of {model_name}: {step_time / step_count * 1000}'
     return step_time_result
 
 
@@ -155,4 +155,8 @@ def train_parallel():
     for rvalue in results_list:
         print(rvalue)
 
-    print('Overall parallel training time(s): {}'.format(overall_dur_time))
+    print(f'Overall parallel training time(s): {overall_dur_time}')
+
+
+if __name__ == '__main__':
+    train_parallel()
